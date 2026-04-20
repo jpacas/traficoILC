@@ -50,7 +50,11 @@ def load_history():
 
 def parse_fetch_time(fetch_time_str):
     try:
-        return datetime.fromisoformat(fetch_time_str)
+        dt = datetime.fromisoformat(fetch_time_str)
+        # Normalizar: si es naive, asumir UTC
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
     except:
         return None
 
