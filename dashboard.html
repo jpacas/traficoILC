@@ -491,23 +491,23 @@
             renderHeader(data.meta);
 
             // Mostrar mensaje si faltan datos
-            if (data.meta.readings_count < 100) {
+            if (data.meta.readings_count < 36) {
                 const section = document.querySelector('.section');
-                const progressPercent = Math.min(100, (data.meta.readings_count / 100) * 100);
+                const progressPercent = Math.min(100, (data.meta.readings_count / 36) * 100);
                 section.innerHTML = `
                     <div style="text-align: center; padding: 60px 20px;">
                         <div style="font-size: 2rem; margin-bottom: 20px;">📊 Recopilando datos...</div>
-                        <div style="font-size: 1.1rem; color: var(--dim); margin-bottom: 20px;">Se necesitan 100 lecturas (500 minutos) para mostrar estadísticas confiables</div>
+                        <div style="font-size: 1.1rem; color: var(--dim); margin-bottom: 20px;">Se necesitan 36 lecturas (180 minutos / 3 horas) para mostrar estadísticas confiables</div>
                         <div style="max-width: 400px; margin: 0 auto; background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border); border-radius: 8px; padding: 20px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                                 <span style="font-weight: 600;">Progreso:</span>
-                                <span style="font-weight: 600;">${data.meta.readings_count} / 100</span>
+                                <span style="font-weight: 600;">${data.meta.readings_count} / 36</span>
                             </div>
                             <div style="background: rgba(107, 114, 128, 0.2); border-radius: 4px; height: 20px; overflow: hidden;">
                                 <div style="background: linear-gradient(90deg, var(--molino), #15803d); height: 100%; width: ${progressPercent}%; transition: width 0.3s ease;"></div>
                             </div>
                             <div style="color: var(--dim); font-size: 0.85rem; margin-top: 12px;">
-                                Falta: ${100 - data.meta.readings_count} lecturas (${Math.round((100 - data.meta.readings_count) * 5)} minutos)
+                                Falta: ${36 - data.meta.readings_count} lecturas (${Math.round((36 - data.meta.readings_count) * 5)} minutos)
                             </div>
                         </div>
                     </div>
