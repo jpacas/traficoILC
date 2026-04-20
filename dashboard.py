@@ -33,6 +33,37 @@ TREND_BAND = 0.15
 ZAFRA_RESET_HOUR = 7
 ZAFRA_UTC_OFFSET_H = -5
 
+# Para calcular flujos horarios se busca la lectura más cercana a 1 hora antes
+# (funciona con historial de lecturas cada 5 min y con sondeo horario).
+TARGET_DELTA_SEC = 3600   # 1 hora
+TOLERANCE_DELTA_SEC = 900  # ±15 minutos
+
+
+def _find_reading_before(timestamps, idx):
+    """Devuelve el índice de la lectura más cercana a TARGET_DELTA_SEC antes de timestamps[idx].
+    Retorna None si no hay ninguna dentro de TOLERANCE_DELTA_SEC."""
+    curr_ts = timestamps[idx]
+    if curr_ts is None:
+        return None
+    best_j = None
+    best_diff = float('inf')
+    for j in range(idx - 1, -1, -1):
+        ts = timestamps[j]
+        if ts is None:
+            continue
+        delta = (curr_ts - ts).total_seconds()
+        if delta < 0:
+            continue
+        diff = abs(delta - TARGET_DELTA_SEC)
+        if diff < best_diff:
+            best_diff = diff
+            best_j = j
+        if delta > TARGET_DELTA_SEC + TOLERANCE_DELTA_SEC:
+            break
+    if best_j is None or best_diff > TOLERANCE_DELTA_SEC:
+        return None
+    return best_j
+
 
 def crosses_zafra_boundary(prev_ts, curr_ts):
     """Devuelve True si el par de lecturas cruza el reset de las 7 AM (jornada zafra)."""
@@ -149,18 +180,23 @@ def compute_api_data(history):
         }
 
     current = history[-1]
-    previous = history[-2] if len(history) >= 2 else None
 
+    # Pre-calcular timestamps para búsqueda eficiente de pares horarios
+    timestamps = [parse_fetch_time(r['fetch_time']) for r in history]
+
+    # Flujo puntual: buscar lectura ~1 hora antes de la más reciente
     elapsed_h = None
-    if previous:
-        curr_ts = parse_fetch_time(current['fetch_time'])
-        prev_ts = parse_fetch_time(previous['fetch_time'])
-        if curr_ts and prev_ts and not crosses_zafra_boundary(prev_ts, curr_ts):
-            elapsed_sec = (curr_ts - prev_ts).total_seconds()
-            if elapsed_sec > 60:
-                elapsed_h = elapsed_sec / 3600
+    previous = None
+    curr_idx = len(history) - 1
+    prev_idx = _find_reading_before(timestamps, curr_idx)
+    if prev_idx is not None:
+        previous = history[prev_idx]
+        curr_ts_cur = timestamps[curr_idx]
+        prev_ts_cur = timestamps[prev_idx]
+        if not crosses_zafra_boundary(prev_ts_cur, curr_ts_cur):
+            elapsed_h = (curr_ts_cur - prev_ts_cur).total_seconds() / 3600
 
-    # Calcular flujos puntuales: solo pares con delta >= 30 min
+    # Calcular flujos históricos: para cada lectura, buscar par ~1 hora antes
     historical_flows = {}
     historical_stage_flows = {}
     for codigo in current['frentes'].keys():
@@ -171,21 +207,18 @@ def compute_api_data(history):
             'vienen':  [],   # campo→vienen  (balance de masa)
         }
 
-    MIN_DELTA_SEC = 1800  # 30 minutos
     for i in range(1, len(history)):
-        curr = history[i]
-        prev = history[i - 1]
-        curr_ts = parse_fetch_time(curr['fetch_time'])
-        prev_ts = parse_fetch_time(prev['fetch_time'])
-        if not curr_ts or not prev_ts:
+        j = _find_reading_before(timestamps, i)
+        if j is None:
             continue
-        elapsed_sec = (curr_ts - prev_ts).total_seconds()
-        if elapsed_sec < MIN_DELTA_SEC:
-            continue
+        curr_ts = timestamps[i]
+        prev_ts = timestamps[j]
         if crosses_zafra_boundary(prev_ts, curr_ts):
             continue
-        elapsed_h_pair = elapsed_sec / 3600
+        elapsed_h_pair = (curr_ts - prev_ts).total_seconds() / 3600
 
+        curr = history[i]
+        prev = history[j]
         for codigo, curr_data in curr['frentes'].items():
             if codigo in prev['frentes']:
                 prev_data = prev['frentes'][codigo]
