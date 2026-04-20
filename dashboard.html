@@ -441,13 +441,13 @@
         </div>
 
         <footer>
-            <p>Monitor de Flujo de Caña — Ingenio La Cabaña | Actualización cada 30 segundos</p>
+            <p>Monitor de Flujo de Caña — Ingenio La Cabaña | Actualización cada 5 minutos</p>
         </footer>
     </div>
 
     <script>
         const API_URL = '/api/data';
-        const REFRESH_INTERVAL = 30000;
+        const REFRESH_INTERVAL = 300000; // 5 minutos
 
         const COLORS = {
             campo: '#3b82f6',
