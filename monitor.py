@@ -18,7 +18,7 @@ from pathlib import Path
 
 URL = "https://intranet.grupolacabana.net/consultasilc/Home/Trafico"
 DATABASE_URL = os.environ.get('DATABASE_URL')
-POLL_INTERVAL = 300  # 5 minutos
+POLL_INTERVAL = 3600  # 1 hora
 RETRY_INTERVAL = 60  # Si no hay datos nuevos, reintentar en 1 minuto
 
 
