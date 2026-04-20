@@ -635,7 +635,7 @@
 
                     // Solo mostrar flujo (T/h) para transiciones válidas: vienen→patio, patio→plantel, plantel→molino
                     // No mostrar flujo para campo→vienen (múltiples viajes) ni molino→van (ya molido)
-                    if (flowTph !== null && ['patio', 'plantel', 'molino'].includes(nextStage)) {
+                    if (typeof flowTph === 'number' && ['patio', 'plantel', 'molino'].includes(nextStage)) {
                         const textFlow = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                         textFlow.setAttribute('x', (x + nodeWidth + nextX) / 2);
                         textFlow.setAttribute('y', nodeY + nodeHeight / 2);
