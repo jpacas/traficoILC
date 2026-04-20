@@ -1,0 +1,9 @@
+[build]
+command = "echo 'Dashboard is static HTML'"
+publish = "."
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://RAILWAY_URL/api/:splat"
+  status = 200
+  force = true

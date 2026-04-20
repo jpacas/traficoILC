@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(browse)",
+      "Skill(gstack-upgrade)",
+      "Bash(python3 *)"
+    ]
+  }
+}

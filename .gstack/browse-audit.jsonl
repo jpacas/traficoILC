@@ -1,0 +1,5 @@
+{"ts":"2026-04-20T18:22:22.914Z","cmd":"goto","args":"https://intranet.grupolacabana.net/consultasilc/Home/Trafico","origin":"https://intranet.grupolacabana.net/consultasilc/Home/Trafico","durationMs":1460,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-04-20T18:22:26.489Z","cmd":"screenshot","args":"/tmp/trafico_page.png","origin":"https://intranet.grupolacabana.net/consultasilc/Home/Trafico","durationMs":86,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-04-20T18:22:26.552Z","cmd":"text","args":"","origin":"https://intranet.grupolacabana.net/consultasilc/Home/Trafico","durationMs":3,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-04-20T18:22:42.549Z","cmd":"network","args":"","origin":"https://intranet.grupolacabana.net/consultasilc/Home/Trafico","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-04-20T18:22:46.648Z","cmd":"html","args":"table","origin":"https://intranet.grupolacabana.net/consultasilc/Home/Trafico","durationMs":8,"status":"ok","hasCookies":false,"mode":"launched"}

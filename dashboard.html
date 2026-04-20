@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Flujo — Ingenio La Cabaña</title>
+    <style>
+        :root {
+            --ok: #22c55e;
+            --low: #f59e0b;
+            --stop: #ef4444;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+            --text: #e2e8f0;
+            --dim: #94a3b8;
+            --campo: #3b82f6;
+            --vienen: #f59e0b;
+            --patio: #8b5cf6;
+            --plantel: #ec4899;
+            --molino: #22c55e;
+            --van: #6b7280;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
+
+        .header-info {
+            display: flex;
+            gap: 24px;
+            font-size: 0.9rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-label { font-weight: 600; color: var(--text); }
+        .info-value { color: var(--dim); }
+
+        .section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        svg.pipeline {
+            width: 100%;
+            height: auto;
+            min-height: 200px;
+            max-height: 280px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(51, 65, 85, 0.3);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+
+        .frentes-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .frente-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .frente-card:hover {
+            border-color: var(--text);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .frente-card.expanded {
+            grid-column: 1 / -1;
+        }
+
+        .frente-header {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .frente-title {
+            flex: 1;
+        }
+
+        .frente-code {
+            font-size: 0.8rem;
+            color: var(--dim);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .frente-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .frente-badges {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge.ok { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid var(--ok); }
+        .badge.low { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid var(--low); }
+        .badge.stop { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid var(--stop); }
+
+        .trend-badge {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        .trend-badge.up {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--ok);
+        }
+
+        .trend-badge.down {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--stop);
+        }
+
+        .trend-badge.stable {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--low);
+        }
+
+        .frente-body {
+            padding: 16px;
+        }
+
+        .frente-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 6px;
+        }
+
+        .flow-value {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .flow-label {
+            font-size: 0.75rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .flow-number {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: monospace;
+            color: var(--molino);
+        }
+
+        .flow-unit {
+            font-size: 0.85rem;
+            color: var(--dim);
+        }
+
+        .flow-bar {
+            flex: 1;
+            margin: 0 16px;
+            height: 8px;
+            background: rgba(107, 114, 128, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .flow-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--molino), #15803d);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .expand-icon {
+            font-size: 1.4rem;
+            color: var(--dim);
+            margin-left: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .frente-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .frente-detail {
+            display: none;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.3);
+        }
+
+        .frente-card.expanded .frente-detail {
+            display: block;
+        }
+
+        .detail-section {
+            margin-bottom: 24px;
+        }
+
+        .detail-section h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--dim);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-box {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: monospace;
+            color: var(--molino);
+        }
+
+        .stat-subtext {
+            font-size: 0.75rem;
+            color: var(--dim);
+            margin-top: 4px;
+        }
+
+        svg.detail-pipeline {
+            width: 100%;
+            height: auto;
+            min-height: 180px;
+            margin: 0 0 20px 0;
+        }
+
+        .chart-container {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            height: 240px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 180px;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(180deg, var(--molino), #15803d);
+            border-radius: 2px;
+            min-height: 2px;
+            position: relative;
+            transition: all 0.2s ease;
+            opacity: 0.8;
+        }
+
+        .chart-bar:hover {
+            opacity: 1;
+        }
+
+        .chart-bar-value {
+            position: absolute;
+            bottom: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.65rem;
+            color: var(--dim);
+            white-space: nowrap;
+            font-family: monospace;
+            font-weight: 600;
+        }
+
+        .chart-label {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--dim);
+            margin-top: 28px;
+            font-weight: 600;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 32px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--dim);
+        }
+
+        .loading { text-align: center; padding: 60px 20px; color: var(--dim); font-size: 1.1rem; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 3px solid rgba(148, 163, 184, 0.3); border-top-color: var(--text); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 12px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-box { background: rgba(239, 68, 68, 0.1); border: 2px solid var(--stop); border-radius: 8px; padding: 16px; color: #fca5a5; text-align: center; margin: 24px 0; font-weight: 500; }
+
+        @media (max-width: 768px) {
+            .frentes-list {
+                grid-template-columns: 1fr;
+            }
+            .detail-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌾 MONITOR DE FLUJO DE CAÑA</h1>
+            <div class="header-info">
+                <div class="info-item">
+                    <span class="info-label">Actualizado:</span>
+                    <span class="info-value" id="last-update">—</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Lecturas:</span>
+                    <span class="info-value" id="reading-count">—</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="section">
+            <h2>📊 Pipeline Global — Todos los Frentes</h2>
+            <svg class="pipeline" id="global-pipeline" viewBox="0 0 1200 220"></svg>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-box" style="background: var(--campo);"></div><span>Campo</span></div>
+                <div class="legend-item"><div class="legend-box" style="background: var(--vienen);"></div><span>En Tránsito</span></div>
+                <div class="legend-item"><div class="legend-box" style="background: var(--patio);"></div><span>Patio</span></div>
+                <div class="legend-item"><div class="legend-box" style="background: var(--plantel);"></div><span>Plantel</span></div>
+                <div class="legend-item"><div class="legend-box" style="background: var(--molino);"></div><span>Molino</span></div>
+                <div class="legend-item"><div class="legend-box" style="background: var(--van);"></div><span>VAN (retorno)</span></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🚜 Flujo por Frente</h2>
+            <div class="frentes-list" id="frentes-list"></div>
+        </div>
+
+        <footer>
+            <p>Monitor de Flujo de Caña — Ingenio La Cabaña | Actualización cada 30 segundos</p>
+        </footer>
+    </div>
+
+    <script>
+        const API_URL = '/api/data';
+        const REFRESH_INTERVAL = 30000;
+
+        const COLORS = {
+            campo: '#3b82f6',
+            vienen: '#f59e0b',
+            patio: '#8b5cf6',
+            plantel: '#ec4899',
+            molino: '#22c55e',
+            van: '#6b7280'
+        };
+
+        let flowHistory = {};
+
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+
+                for (const codigo in data.frentes) {
+                    if (!flowHistory[codigo]) {
+                        flowHistory[codigo] = [];
+                    }
+                    const flow = data.frentes[codigo].flow.current_tph || 0;
+                    flowHistory[codigo].push({
+                        time: new Date(data.meta.server_time),
+                        flow: flow
+                    });
+                    if (flowHistory[codigo].length > 20) {
+                        flowHistory[codigo].shift();
+                    }
+                }
+
+                render(data);
+            } catch (error) {
+                console.error('Error:', error);
+                document.querySelector('.section').innerHTML = '<div class="error-box">❌ Error conectando con el servidor</div>';
+            }
+        }
+
+        function render(data) {
+            renderHeader(data.meta);
+
+            // Mostrar mensaje si faltan datos
+            if (data.meta.readings_count < 100) {
+                const section = document.querySelector('.section');
+                const progressPercent = Math.min(100, (data.meta.readings_count / 100) * 100);
+                section.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <div style="font-size: 2rem; margin-bottom: 20px;">📊 Recopilando datos...</div>
+                        <div style="font-size: 1.1rem; color: var(--dim); margin-bottom: 20px;">Se necesitan 100 lecturas (500 minutos) para mostrar estadísticas confiables</div>
+                        <div style="max-width: 400px; margin: 0 auto; background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border); border-radius: 8px; padding: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span style="font-weight: 600;">Progreso:</span>
+                                <span style="font-weight: 600;">${data.meta.readings_count} / 100</span>
+                            </div>
+                            <div style="background: rgba(107, 114, 128, 0.2); border-radius: 4px; height: 20px; overflow: hidden;">
+                                <div style="background: linear-gradient(90deg, var(--molino), #15803d); height: 100%; width: ${progressPercent}%; transition: width 0.3s ease;"></div>
+                            </div>
+                            <div style="color: var(--dim); font-size: 0.85rem; margin-top: 12px;">
+                                Falta: ${100 - data.meta.readings_count} lecturas (${Math.round((100 - data.meta.readings_count) * 5)} minutos)
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            renderGlobalPipeline(data.total, data.global_stages);
+            renderFrentesList(data);
+        }
+
+        function renderHeader(meta) {
+            if (meta.last_fetch_time) {
+                const time = new Date(meta.last_fetch_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                document.getElementById('last-update').textContent = time;
+                document.getElementById('reading-count').textContent = meta.readings_count;
+            }
+        }
+
+        function drawPipeline(svgEl, snapshot, maxT, isDetail = false, stageFlows = null) {
+            const stages = [
+                { key: 'tcampo', label: 'CAMPO', color: COLORS.campo, icon: '🌾', stage: 'campo' },
+                { key: 'tvienen', label: 'VIENEN', color: COLORS.vienen, icon: '🚚', stage: 'vienen' },
+                { key: 'tpatio', label: 'PATIO', color: COLORS.patio, icon: '📦', stage: 'patio' },
+                { key: 'tplantel', label: 'PLANTEL', color: COLORS.plantel, icon: '🏭', stage: 'plantel' },
+                { key: 'tmoli', label: 'MOLINO', color: COLORS.molino, icon: '⚙️', stage: 'molino' }
+            ];
+
+            const nodeWidth = isDetail ? 100 : 120;
+            const nodeHeight = isDetail ? 85 : 100;
+            const spacing = isDetail ? 180 : 220;
+            const startX = isDetail ? 40 : 50;
+            const nodeY = 40;
+            const vanY = isDetail ? 160 : 190;
+
+            svgEl.innerHTML = '';
+
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', `arrowhead-${Date.now()}`);
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '10');
+            marker.setAttribute('refX', '9');
+            marker.setAttribute('refY', '3');
+            marker.setAttribute('orient', 'auto');
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M0 0, 10 3, 0 6');
+            path.setAttribute('fill', 'black');
+            marker.appendChild(path);
+            defs.appendChild(marker);
+            svgEl.appendChild(defs);
+            const markerId = `arrowhead-${Date.now()}`;
+
+            stages.forEach((stage, idx) => {
+                const x = startX + idx * spacing;
+                const y = nodeY;
+                const val = snapshot[stage.key] || 0;
+                const u = stage.key === 'tmoli' ? snapshot.umoli : snapshot['u' + stage.key.substring(1)] || 0;
+                const opacity = val > 0 ? 0.7 + (val / maxT) * 0.3 : 0.3;
+
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', x);
+                rect.setAttribute('y', y);
+                rect.setAttribute('width', nodeWidth);
+                rect.setAttribute('height', nodeHeight);
+                rect.setAttribute('rx', '8');
+                rect.setAttribute('fill', stage.color);
+                rect.setAttribute('opacity', opacity);
+                rect.setAttribute('stroke', stage.color);
+                rect.setAttribute('stroke-width', '2');
+                svgEl.appendChild(rect);
+
+                const text1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text1.setAttribute('x', x + nodeWidth / 2);
+                text1.setAttribute('y', y + 24);
+                text1.setAttribute('font-size', isDetail ? '13' : '15');
+                text1.setAttribute('font-weight', '600');
+                text1.setAttribute('fill', 'white');
+                text1.setAttribute('text-anchor', 'middle');
+                text1.textContent = stage.icon + ' ' + stage.label;
+                svgEl.appendChild(text1);
+
+                const text2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text2.setAttribute('x', x + nodeWidth / 2);
+                text2.setAttribute('y', y + 52);
+                text2.setAttribute('font-size', isDetail ? '15' : '18');
+                text2.setAttribute('font-weight', '700');
+                text2.setAttribute('fill', 'white');
+                text2.setAttribute('text-anchor', 'middle');
+                text2.textContent = val.toFixed(0) + 't';
+                svgEl.appendChild(text2);
+
+                const text3 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text3.setAttribute('x', x + nodeWidth / 2);
+                text3.setAttribute('y', y + 72);
+                text3.setAttribute('font-size', isDetail ? '11' : '12');
+                text3.setAttribute('fill', 'white');
+                text3.setAttribute('text-anchor', 'middle');
+                text3.textContent = u + 'u';
+                svgEl.appendChild(text3);
+
+                if (idx < stages.length - 1) {
+                    const nextX = startX + (idx + 1) * spacing;
+                    const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    arrow.setAttribute('x1', x + nodeWidth);
+                    arrow.setAttribute('y1', nodeY + nodeHeight / 2);
+                    arrow.setAttribute('x2', nextX);
+                    arrow.setAttribute('y2', nodeY + nodeHeight / 2);
+                    arrow.setAttribute('stroke', 'black');
+                    arrow.setAttribute('stroke-width', '2.5');
+                    arrow.setAttribute('marker-end', `url(#${markerId})`);
+                    arrow.setAttribute('stroke-linecap', 'round');
+                    svgEl.appendChild(arrow);
+
+                    const nextVal = snapshot[stages[idx + 1].key] || 0;
+                    const nextStage = stages[idx + 1].stage;
+                    const flowTph = stageFlows && stageFlows[nextStage] ? stageFlows[nextStage].flow_tph : null;
+
+                    const textArrow = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    textArrow.setAttribute('x', (x + nodeWidth + nextX) / 2);
+                    textArrow.setAttribute('y', nodeY + nodeHeight / 2 - 12);
+                    textArrow.setAttribute('font-size', isDetail ? '11' : '12');
+                    textArrow.setAttribute('text-anchor', 'middle');
+                    textArrow.setAttribute('fill', 'var(--dim)');
+                    textArrow.setAttribute('font-weight', '600');
+                    textArrow.textContent = nextVal.toFixed(0) + 't';
+                    svgEl.appendChild(textArrow);
+
+                    // Mostrar flujo en t/h debajo de la flecha si está disponible
+                    if (flowTph !== null) {
+                        const textFlow = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        textFlow.setAttribute('x', (x + nodeWidth + nextX) / 2);
+                        textFlow.setAttribute('y', nodeY + nodeHeight / 2 + 12);
+                        textFlow.setAttribute('font-size', isDetail ? '9' : '10');
+                        textFlow.setAttribute('text-anchor', 'middle');
+                        textFlow.setAttribute('fill', '#22c55e');
+                        textFlow.setAttribute('font-weight', '700');
+                        textFlow.setAttribute('font-family', 'monospace');
+                        textFlow.textContent = flowTph.toFixed(1) + ' t/h';
+                        svgEl.appendChild(textFlow);
+                    }
+                }
+            });
+
+            const lastX = startX + (stages.length - 1) * spacing + nodeWidth / 2;
+            const vanLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            vanLine.setAttribute('d', `M ${lastX} ${nodeY + nodeHeight} Q ${lastX - 80} ${nodeY + nodeHeight + 50} ${startX + nodeWidth / 2} ${vanY}`);
+            vanLine.setAttribute('stroke', COLORS.van);
+            vanLine.setAttribute('stroke-width', '2.5');
+            vanLine.setAttribute('fill', 'none');
+            vanLine.setAttribute('stroke-dasharray', '6 4');
+            vanLine.setAttribute('marker-end', `url(#${markerId})`);
+            vanLine.setAttribute('stroke-linecap', 'round');
+            svgEl.appendChild(vanLine);
+
+            const vanLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            vanLabel.setAttribute('x', (lastX + startX) / 2 - 40);
+            vanLabel.setAttribute('y', nodeY + nodeHeight + 35);
+            vanLabel.setAttribute('font-size', isDetail ? '11' : '12');
+            vanLabel.setAttribute('fill', COLORS.van);
+            vanLabel.setAttribute('font-weight', '600');
+            vanLabel.textContent = `VAN: ${snapshot.uvan}u`;
+            svgEl.appendChild(vanLabel);
+        }
+
+        function renderGlobalPipeline(total, globalStages) {
+            const maxT = 3000;
+            drawPipeline(document.getElementById('global-pipeline'), total.snapshot, maxT, false, globalStages);
+        }
+
+        function renderFrentesList(data) {
+            const list = document.getElementById('frentes-list');
+            list.innerHTML = '';
+
+            const sortedCodigos = Object.keys(data.frentes).sort((a, b) => {
+                const aNum = parseInt(a);
+                const bNum = parseInt(b);
+                return (isNaN(aNum) ? 9999 : aNum) - (isNaN(bNum) ? 9999 : bNum);
+            });
+
+            const maxFlow = Math.max(...Object.values(data.frentes).map(f => f.flow.current_tph || 0), 100);
+
+            sortedCodigos.forEach(codigo => {
+                const f = data.frentes[codigo];
+                const flow = f.flow.current_tph || 0;
+                const flowWidth = Math.max(2, (flow / maxFlow) * 100);
+
+                const card = document.createElement('div');
+                card.className = 'frente-card';
+
+                const history = flowHistory[codigo] || [];
+                const avgFlow = history.length > 0 ? history.reduce((a, b) => a + b.flow, 0) / history.length : f.flow.avg_tph || 0;
+                const diff = flow - avgFlow;
+                const diffPercent = avgFlow > 0 ? ((diff / avgFlow) * 100).toFixed(1) : 0;
+
+                const trendClass = f.trend === 'up' ? 'up' : f.trend === 'down' ? 'down' : 'stable';
+                const trendSymbol = f.trend === 'up' ? '↑' : f.trend === 'down' ? '↓' : '→';
+
+                card.innerHTML = `
+                    <div class="frente-header">
+                        <div class="frente-title">
+                            <div class="frente-code">[${codigo}]</div>
+                            <div class="frente-name">${f.nombre}</div>
+                        </div>
+                        <div class="frente-badges">
+                            <div class="badge ${f.status}">${f.status.toUpperCase()}</div>
+                            <div class="trend-badge ${trendClass}">${trendSymbol}</div>
+                        </div>
+                    </div>
+
+                    <div class="frente-body">
+                        <div class="frente-flow">
+                            <div class="flow-value">
+                                <div class="flow-label">Flujo Actual</div>
+                                <div class="flow-number">${flow.toFixed(0)}</div>
+                                <div class="flow-unit">t/h</div>
+                            </div>
+                            <div class="flow-bar">
+                                <div class="flow-bar-fill" style="width: ${flowWidth}%"></div>
+                            </div>
+                            <div class="expand-icon">▼</div>
+                        </div>
+                    </div>
+
+                    <div class="frente-detail">
+                        <div class="detail-section">
+                            <h3>Pipeline del Frente</h3>
+                            <svg class="detail-pipeline" viewBox="0 0 900 200"></svg>
+                        </div>
+
+                        <div class="detail-section">
+                            <h3>Flujo Molino — Actual vs Promedio</h3>
+                            <div class="detail-stats">
+                                <div class="stat-box">
+                                    <div class="stat-label">Actual</div>
+                                    <div class="stat-value">${flow.toFixed(1)}</div>
+                                    <div class="stat-subtext">t/h</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label">Promedio</div>
+                                    <div class="stat-value">${avgFlow.toFixed(1)}</div>
+                                    <div class="stat-subtext">${history.length} datos</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label">Diferencia</div>
+                                    <div class="stat-value" style="color: ${diff > 0 ? 'var(--ok)' : 'var(--dim)'}">${diff > 0 ? '+' : ''}${diff.toFixed(1)}</div>
+                                    <div class="stat-subtext">(${diffPercent}%)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${f.stages ? `<div class="detail-section">
+                            <h3>Flujos por Etapa (t/h)</h3>
+                            <div class="detail-stats">
+                                <div class="stat-box">
+                                    <div class="stat-label">Campo</div>
+                                    <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.campo.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.campo.flow_tph.toFixed(1)}</div>
+                                    <div class="stat-subtext">t/h</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label">Vienen</div>
+                                    <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.vienen.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.vienen.flow_tph.toFixed(1)}</div>
+                                    <div class="stat-subtext">t/h</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label">Patio</div>
+                                    <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.patio.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.patio.flow_tph.toFixed(1)}</div>
+                                    <div class="stat-subtext">t/h</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label">Plantel</div>
+                                    <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.plantel.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.plantel.flow_tph.toFixed(1)}</div>
+                                    <div class="stat-subtext">t/h</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label">Molino</div>
+                                    <div class="stat-value" style="font-size: 1.2rem; color: var(--molino);">${f.stages.molino.flow_tph.toFixed(1)}</div>
+                                    <div class="stat-subtext">t/h</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label">VAN</div>
+                                    <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.van.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.van.flow_tph.toFixed(1)}</div>
+                                    <div class="stat-subtext">t/h</div>
+                                </div>
+                            </div>
+                        </div>` : ''}
+
+
+                        <div class="detail-section">
+                            <h3>Tendencia — Últimas ${history.length} Lecturas</h3>
+                            <div class="chart-container">
+                                <div class="chart" id="chart-${codigo}"></div>
+                                <div class="chart-label">Tiempo →</div>
+                            </div>
+                        </div>
+
+                        <div class="detail-section">
+                            <div class="detail-stats">
+                                <div class="stat-box">
+                                    <div class="stat-label">Delta</div>
+                                    <div class="stat-value" style="color: ${f.flow.delta_ton > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.flow.delta_ton > 0 ? '+' : ''}${f.flow.delta_ton.toFixed(2)}</div>
+                                    <div class="stat-subtext">toneladas</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label">Datos API</div>
+                                    <div class="stat-value">${f.flow.history_points}</div>
+                                    <div class="stat-subtext">puntos</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label">Estado</div>
+                                    <div class="stat-value" style="font-size: 1.3rem;">${f.status === 'ok' ? '✓' : f.status === 'low' ? '◐' : '✕'}</div>
+                                    <div class="stat-subtext">${f.status.toUpperCase()}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => {
+                    card.classList.toggle('expanded');
+                    if (card.classList.contains('expanded')) {
+                        setTimeout(() => {
+                            const svg = card.querySelector('.detail-pipeline');
+                            if (svg && !svg.innerHTML) {
+                                const maxTFrente = Math.max(f.snapshot.tcampo, f.snapshot.tvienen, f.snapshot.tpatio, f.snapshot.tplantel, f.snapshot.tmoli, 100);
+                                drawPipeline(svg, f.snapshot, maxTFrente, true, f.stages);
+
+                                const chartEl = card.querySelector(`#chart-${codigo}`);
+                                if (chartEl && history.length > 0) {
+                                    const maxFlowHistory = Math.max(...history.map(h => h.flow), avgFlow * 1.5);
+                                    chartEl.innerHTML = '';
+                                    history.forEach((h, idx) => {
+                                        const barHeight = (h.flow / maxFlowHistory) * 160;
+                                        const bar = document.createElement('div');
+                                        bar.className = 'chart-bar';
+                                        bar.style.height = barHeight + 'px';
+                                        const value = document.createElement('div');
+                                        value.className = 'chart-bar-value';
+                                        value.textContent = h.flow.toFixed(0);
+                                        bar.appendChild(value);
+                                        chartEl.appendChild(bar);
+                                    });
+                                }
+                            }
+                        }, 50);
+                    }
+                });
+
+                list.appendChild(card);
+            });
+        }
+
+        window.addEventListener('load', () => {
+            fetchData();
+            setInterval(fetchData, REFRESH_INTERVAL);
+        });
+    </script>
+</body>
+</html>
