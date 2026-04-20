@@ -5,3 +5,4 @@ builder = "nixpacks"
 healthcheckPath = "/api/data"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
+startCommand = "honcho -f Procfile start"
