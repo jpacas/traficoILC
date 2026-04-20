@@ -28,6 +28,21 @@ THRESHOLD_OK_REL = 0.70
 THRESHOLD_LOW_REL = 0.30
 TREND_BAND = 0.15
 
+# Cada día a las 7 AM (hora Colombia, UTC-5) se reinicia el contador tmoli
+# para el inicio de una nueva jornada zafra.
+ZAFRA_RESET_HOUR = 7
+ZAFRA_UTC_OFFSET_H = -5
+
+
+def crosses_zafra_boundary(prev_ts, curr_ts):
+    """Devuelve True si el par de lecturas cruza el reset de las 7 AM (jornada zafra)."""
+    def zafra_day(ts):
+        local = ts + timedelta(hours=ZAFRA_UTC_OFFSET_H)
+        if local.hour < ZAFRA_RESET_HOUR:
+            return local.date() - timedelta(days=1)
+        return local.date()
+    return zafra_day(prev_ts) != zafra_day(curr_ts)
+
 
 def load_history():
     if not DATABASE_URL:
@@ -140,7 +155,7 @@ def compute_api_data(history):
     if previous:
         curr_ts = parse_fetch_time(current['fetch_time'])
         prev_ts = parse_fetch_time(previous['fetch_time'])
-        if curr_ts and prev_ts:
+        if curr_ts and prev_ts and not crosses_zafra_boundary(prev_ts, curr_ts):
             elapsed_sec = (curr_ts - prev_ts).total_seconds()
             if elapsed_sec > 60:
                 elapsed_h = elapsed_sec / 3600
@@ -166,6 +181,8 @@ def compute_api_data(history):
             continue
         elapsed_sec = (curr_ts - prev_ts).total_seconds()
         if elapsed_sec < MIN_DELTA_SEC:
+            continue
+        if crosses_zafra_boundary(prev_ts, curr_ts):
             continue
         elapsed_h_pair = elapsed_sec / 3600
 

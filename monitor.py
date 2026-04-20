@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Monitor de Flujo de Caña por Frente
-Interroga cada 5 minutos la tabla de tráfico del Ingenio La Cabaña,
+Interroga cada hora la tabla de tráfico del Ingenio La Cabaña,
 calcula el flujo (delta de toneladas) por frente y muestra el resultado.
 """
 
