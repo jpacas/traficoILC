@@ -397,13 +397,58 @@
 
         .error-box { background: rgba(239, 68, 68, 0.1); border: 2px solid var(--stop); border-radius: 8px; padding: 16px; color: #fca5a5; text-align: center; margin: 24px 0; font-weight: 500; }
 
+        .pipeline-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .pipeline-scroll svg.pipeline {
+            min-width: 700px;
+        }
+
+        .stage-flows-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .stage-flow-box {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px 10px;
+            text-align: center;
+        }
+
         @media (max-width: 768px) {
-            .frentes-list {
-                grid-template-columns: 1fr;
+            .container { padding: 12px; }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
             }
-            .detail-stats {
-                grid-template-columns: 1fr;
-            }
+            .header-info { flex-wrap: wrap; gap: 12px; }
+
+            h1 { font-size: 1.2rem; }
+
+            .frentes-list { grid-template-columns: 1fr; }
+
+            .detail-stats { grid-template-columns: repeat(2, 1fr); }
+
+            .stage-flows-grid { grid-template-columns: repeat(2, 1fr); }
+
+            .flow-number { font-size: 1.6rem; }
+
+            .stat-value { font-size: 1.3rem; }
+
+            .frente-card.expanded { grid-column: 1; }
+        }
+
+        @media (max-width: 480px) {
+            .detail-stats { grid-template-columns: 1fr; }
+            .stage-flows-grid { grid-template-columns: repeat(2, 1fr); }
+            .frente-name { font-size: 0.95rem; }
+            .badge { padding: 4px 8px; font-size: 0.75rem; }
         }
     </style>
 </head>
@@ -425,7 +470,9 @@
 
         <div class="section">
             <h2>📊 Pipeline Global — Todos los Frentes</h2>
-            <svg class="pipeline" id="global-pipeline" viewBox="0 0 1200 220"></svg>
+            <div class="pipeline-scroll">
+                <svg class="pipeline" id="global-pipeline" viewBox="0 0 1200 220"></svg>
+            </div>
             <div class="legend">
                 <div class="legend-item"><div class="legend-box" style="background: var(--campo);"></div><span>Campo</span></div>
                 <div class="legend-item"><div class="legend-box" style="background: var(--vienen);"></div><span>En Tránsito</span></div>
@@ -442,13 +489,13 @@
         </div>
 
         <footer>
-            <p>Monitor de Flujo de Caña — Ingenio La Cabaña | Actualización cada 5 minutos</p>
+            <p>Monitor de Flujo de Caña — Ingenio La Cabaña | Actualización cada hora</p>
         </footer>
     </div>
 
     <script>
         const API_URL = '/api/data';
-        const REFRESH_INTERVAL = 300000; // 5 minutos
+        const REFRESH_INTERVAL = 3600000; // 1 hora
 
         const COLORS = {
             campo: '#3b82f6',
@@ -633,9 +680,7 @@
                     const nextStage = stages[idx + 1].stage;
                     const flowTph = stageFlows && stageFlows[nextStage] ? stageFlows[nextStage].flow_tph : null;
 
-                    // Solo mostrar flujo (T/h) para transiciones válidas: vienen→patio, patio→plantel, plantel→molino
-                    // No mostrar flujo para campo→vienen (múltiples viajes) ni molino→van (ya molido)
-                    if (typeof flowTph === 'number' && ['patio', 'plantel', 'molino'].includes(nextStage)) {
+                    if (typeof flowTph === 'number' && ['vienen', 'patio', 'plantel', 'molino'].includes(nextStage)) {
                         const textFlow = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                         textFlow.setAttribute('x', (x + nodeWidth + nextX) / 2);
                         textFlow.setAttribute('y', nodeY + nodeHeight / 2);
@@ -733,7 +778,9 @@
                     <div class="frente-detail">
                         <div class="detail-section">
                             <h3>Pipeline del Frente</h3>
-                            <svg class="detail-pipeline" viewBox="0 0 900 200"></svg>
+                            <div class="pipeline-scroll">
+                                <svg class="detail-pipeline" viewBox="0 0 900 200" style="min-width:600px"></svg>
+                            </div>
                         </div>
 
                         <div class="detail-section">
@@ -758,23 +805,24 @@
                         </div>
 
                         ${f.stages ? `<div class="detail-section">
-                            <h3>Flujos de Transporte (t/h)</h3>
-                            <div class="detail-stats">
-                                ${f.stages.patio && f.stages.patio.flow_tph !== null ? `<div class="stat-box">
-                                    <div class="stat-label">Vienen → Patio</div>
-                                    <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.patio.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.patio.flow_tph.toFixed(1)}</div>
-                                    <div class="stat-subtext">t/h</div>
-                                </div>` : ''}
-                                ${f.stages.plantel && f.stages.plantel.flow_tph !== null ? `<div class="stat-box">
-                                    <div class="stat-label">Patio → Plantel</div>
-                                    <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.plantel.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.plantel.flow_tph.toFixed(1)}</div>
-                                    <div class="stat-subtext">t/h</div>
-                                </div>` : ''}
-                                ${f.stages.molino && f.stages.molino.flow_tph !== null ? `<div class="stat-box">
-                                    <div class="stat-label">Plantel → Molino</div>
-                                    <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.molino.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.molino.flow_tph.toFixed(1)}</div>
-                                    <div class="stat-subtext">t/h</div>
-                                </div>` : ''}
+                            <h3>Flujos de Transporte (t/h) — Balance de Masa</h3>
+                            <div class="stage-flows-grid">
+                                ${[
+                                    { key: 'vienen',  label: 'Campo → Vienen',   color: 'var(--vienen)' },
+                                    { key: 'patio',   label: 'Vienen → Patio',   color: 'var(--patio)'  },
+                                    { key: 'plantel', label: 'Patio → Plantel',  color: 'var(--plantel)'},
+                                    { key: 'molino',  label: 'Plantel → Molino', color: 'var(--molino)' }
+                                ].map(s => {
+                                    const tph = f.stages[s.key] && f.stages[s.key].flow_tph !== null
+                                        ? f.stages[s.key].flow_tph : null;
+                                    return `<div class="stage-flow-box" style="border-left: 3px solid ${s.color}">
+                                        <div class="stat-label">${s.label}</div>
+                                        <div class="stat-value" style="color: ${tph !== null && tph > 0 ? s.color : 'var(--dim)'}">
+                                            ${tph !== null ? tph.toFixed(1) : '—'}
+                                        </div>
+                                        <div class="stat-subtext">t/h</div>
+                                    </div>`;
+                                }).join('')}
                             </div>
                         </div>` : ''}
 

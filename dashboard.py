@@ -291,7 +291,11 @@ def compute_api_data(history):
             },
             "stages": {stage: {
                 **_calculate_stage_flows(curr_frente)[stage],
-                'flow_tph': round(avg_stage_flows[codigo].get(stage), 2) if stage in ['plantel', 'patio', 'vienen'] and avg_stage_flows[codigo].get(stage) is not None else None
+                'flow_tph': (
+                    round(avg_flows.get(codigo), 2) if stage == 'molino' and avg_flows.get(codigo) is not None else
+                    round(avg_stage_flows[codigo].get(stage), 2) if stage in ['plantel', 'patio', 'vienen'] and avg_stage_flows[codigo].get(stage) is not None else
+                    None
+                )
             } for stage in _calculate_stage_flows(curr_frente)},
             "status": status,
             "trend": trend
@@ -321,6 +325,8 @@ def compute_api_data(history):
         )
         if stage_flow_sum > 0:
             global_stages[stage]['flow_tph'] = round(stage_flow_sum, 2)
+    if total_avg_flow > 0:
+        global_stages['molino']['flow_tph'] = round(total_avg_flow, 2)
 
     return {
         "meta": {
