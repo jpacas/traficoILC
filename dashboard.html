@@ -758,38 +758,23 @@
                         </div>
 
                         ${f.stages ? `<div class="detail-section">
-                            <h3>Flujos por Etapa (t/h)</h3>
+                            <h3>Flujos de Transporte (t/h)</h3>
                             <div class="detail-stats">
-                                <div class="stat-box">
-                                    <div class="stat-label">Campo</div>
-                                    <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.campo.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.campo.flow_tph.toFixed(1)}</div>
-                                    <div class="stat-subtext">t/h</div>
-                                </div>
-                                <div class="stat-box">
-                                    <div class="stat-label">Vienen</div>
-                                    <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.vienen.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.vienen.flow_tph.toFixed(1)}</div>
-                                    <div class="stat-subtext">t/h</div>
-                                </div>
-                                <div class="stat-box">
-                                    <div class="stat-label">Patio</div>
+                                ${f.stages.patio ? `<div class="stat-box">
+                                    <div class="stat-label">Vienen → Patio</div>
                                     <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.patio.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.patio.flow_tph.toFixed(1)}</div>
                                     <div class="stat-subtext">t/h</div>
-                                </div>
-                                <div class="stat-box">
-                                    <div class="stat-label">Plantel</div>
+                                </div>` : ''}
+                                ${f.stages.plantel ? `<div class="stat-box">
+                                    <div class="stat-label">Patio → Plantel</div>
                                     <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.plantel.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.plantel.flow_tph.toFixed(1)}</div>
                                     <div class="stat-subtext">t/h</div>
-                                </div>
-                                <div class="stat-box">
-                                    <div class="stat-label">Molino</div>
-                                    <div class="stat-value" style="font-size: 1.2rem; color: var(--molino);">${f.stages.molino.flow_tph.toFixed(1)}</div>
+                                </div>` : ''}
+                                ${f.stages.molino ? `<div class="stat-box">
+                                    <div class="stat-label">Plantel → Molino</div>
+                                    <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.molino.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.molino.flow_tph.toFixed(1)}</div>
                                     <div class="stat-subtext">t/h</div>
-                                </div>
-                                <div class="stat-box">
-                                    <div class="stat-label">VAN</div>
-                                    <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.van.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.van.flow_tph.toFixed(1)}</div>
-                                    <div class="stat-subtext">t/h</div>
-                                </div>
+                                </div>` : ''}
                             </div>
                         </div>` : ''}
 
