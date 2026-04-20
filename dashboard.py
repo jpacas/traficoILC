@@ -13,7 +13,7 @@ import argparse
 import psycopg2
 from psycopg2.extras import Json
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from statistics import mean
 from urllib.parse import urlparse
@@ -124,7 +124,7 @@ def compute_api_data(history):
                 "last_timestamp": None,
                 "last_fetch_time": None,
                 "readings_count": 0,
-                "server_time": datetime.now().isoformat()
+                "server_time": datetime.now(timezone.utc).isoformat()
             },
             "frentes": {},
             "total": {
@@ -240,7 +240,7 @@ def compute_api_data(history):
             "last_timestamp": current['timestamp'],
             "last_fetch_time": current['fetch_time'],
             "readings_count": len(history),
-            "server_time": datetime.now().isoformat()
+            "server_time": datetime.now(timezone.utc).isoformat()
         },
         "frentes": frentes_data,
         "total": {

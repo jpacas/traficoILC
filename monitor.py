@@ -8,7 +8,7 @@ calcula el flujo (delta de toneladas) por frente y muestra el resultado.
 import json
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 from tabulate import tabulate
 import os
@@ -123,7 +123,7 @@ def fetch_table() -> dict:
 
         return {
             'timestamp': timestamp_str,
-            'fetch_time': datetime.now().isoformat(),
+            'fetch_time': datetime.now(timezone.utc).isoformat(),
             'frentes': frentes,
             'total': total_data
         }
