@@ -760,17 +760,17 @@
                         ${f.stages ? `<div class="detail-section">
                             <h3>Flujos de Transporte (t/h)</h3>
                             <div class="detail-stats">
-                                ${f.stages.patio ? `<div class="stat-box">
+                                ${f.stages.patio && f.stages.patio.flow_tph !== null ? `<div class="stat-box">
                                     <div class="stat-label">Vienen → Patio</div>
                                     <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.patio.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.patio.flow_tph.toFixed(1)}</div>
                                     <div class="stat-subtext">t/h</div>
                                 </div>` : ''}
-                                ${f.stages.plantel ? `<div class="stat-box">
+                                ${f.stages.plantel && f.stages.plantel.flow_tph !== null ? `<div class="stat-box">
                                     <div class="stat-label">Patio → Plantel</div>
                                     <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.plantel.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.plantel.flow_tph.toFixed(1)}</div>
                                     <div class="stat-subtext">t/h</div>
                                 </div>` : ''}
-                                ${f.stages.molino ? `<div class="stat-box">
+                                ${f.stages.molino && f.stages.molino.flow_tph !== null ? `<div class="stat-box">
                                     <div class="stat-label">Plantel → Molino</div>
                                     <div class="stat-value" style="font-size: 1.2rem; color: ${f.stages.molino.flow_tph > 0 ? 'var(--ok)' : 'var(--dim)'}">${f.stages.molino.flow_tph.toFixed(1)}</div>
                                     <div class="stat-subtext">t/h</div>
