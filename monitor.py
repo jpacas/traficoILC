@@ -136,10 +136,15 @@ def fetch_table() -> dict:
 def init_db():
     """Crea tabla si no existe."""
     if not DATABASE_URL:
-        return
+        print("ERROR: DATABASE_URL no configurada")
+        return False
+
     try:
+        print("Conectando a PostgreSQL...")
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
+
+        print("Creando tabla 'readings'...")
         cur.execute("""
             CREATE TABLE IF NOT EXISTS readings (
                 id SERIAL PRIMARY KEY,
@@ -149,10 +154,16 @@ def init_db():
             );
         """)
         conn.commit()
+        print("✓ Tabla 'readings' creada exitosamente")
+
         cur.close()
         conn.close()
+        return True
     except Exception as e:
-        print(f"Error inicializando DB: {e}")
+        print(f"✗ Error inicializando DB: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
 
 
 def load_history() -> list:
@@ -302,17 +313,24 @@ def data_changed(current, previous):
 
 def main():
     """Loop principal."""
-    init_db()
-    history = load_history()
-    last_timestamp = history[-1]['timestamp'] if history else None
-
     print("Monitor de Flujo de Caña")
     if DATABASE_URL:
         print("Modo: PostgreSQL")
+        print("Inicializando base de datos...")
+        # Reintentar init_db() hasta 3 veces
+        for attempt in range(1, 4):
+            if init_db():
+                break
+            if attempt < 3:
+                print(f"Reintentando en 5s... (intento {attempt}/3)")
+                time.sleep(5)
     else:
         print("ADVERTENCIA: DATABASE_URL no configurada. Modo offline.")
     print(f"URL: {URL}")
-    print(f"Intervalo de sondeo: {POLL_INTERVAL}s")
+    print(f"Intervalo de sondeo: {POLL_INTERVAL}s\n")
+
+    history = load_history()
+    last_timestamp = history[-1]['timestamp'] if history else None
 
     while True:
         reading = fetch_table()
