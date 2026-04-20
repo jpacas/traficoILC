@@ -90,34 +90,23 @@ def classify_trend(flow, avg_flow):
         return "stable"
 
 
-def _calculate_stage_flows(curr_frente, prev_frente, elapsed_h):
-    """Calcula flujo en t/h SOLO para transiciones válidas: vienen→patio, patio→plantel, plantel→molino.
-    No se calcula para campo→vienen (múltiples viajes) ni molino→van (ya molido, transporte)."""
-    if prev_frente is None or elapsed_h is None or elapsed_h <= 0:
-        return None
-
-    # Solo flujos válidos: la flecha muestra el flujo INTO el siguiente stage
-    # El flujo into PATIO es el cambio en patio (caña que entró desde vienen)
-    # El flujo into PLANTEL es el cambio en plantel (caña que entró desde patio)
-    # El flujo into MOLINO es el cambio en molino (caña que entró desde plantel)
+def _calculate_stage_flows(curr_frente):
+    """Devuelve los snapshots actuales de cada stage (para display dentro de cajas).
+    Los flujos se calculan aparte con histórico."""
     result = {}
 
-    flow_transitions = {
-        'patio': ('tpatio', 'upatio'),      # flujo vienen → patio
-        'plantel': ('tplantel', 'uplantel'), # flujo patio → plantel
-        'molino': ('tmoli', 'umoli'),        # flujo plantel → molino
+    stages = {
+        'campo': ('tcampo', 'ucampo'),
+        'vienen': ('tvienen', 'uvienen'),
+        'patio': ('tpatio', 'upatio'),
+        'plantel': ('tplantel', 'uplantel'),
+        'molino': ('tmoli', 'umoli'),
+        'van': ('tvan', 'uvan')
     }
 
-    for stage_name, (t_key, u_key) in flow_transitions.items():
-        curr_t = curr_frente.get(t_key, 0)
-        prev_t = prev_frente.get(t_key, 0)
-        delta_t = curr_t - prev_t
-        flow_tph = delta_t / elapsed_h if elapsed_h > 0 else 0
-
+    for stage_name, (t_key, u_key) in stages.items():
         result[stage_name] = {
-            'delta_ton': round(delta_t, 2),
-            'flow_tph': round(flow_tph, 2),
-            'current_t': round(curr_t, 2),
+            'current_t': round(curr_frente.get(t_key, 0), 2),
             'current_u': curr_frente.get(u_key, 0)
         }
 
@@ -195,11 +184,12 @@ def compute_api_data(history):
                         flow_stage = delta_stage / elapsed_h_pair
                         historical_stage_flows[codigo][stage].append(flow_stage)
 
-    # Promediar solo los últimos 5+ flujos de cada tipo
+    # Promediar: al menos 5 flujos si disponibles, sino usar todos disponibles
     avg_flows = {}
     avg_stage_flows = {}
     for codigo in current['frentes'].keys():
         flows = historical_flows[codigo]
+        # Si hay 5+, promediar los últimos 5. Si hay menos, promediar todos.
         avg_flows[codigo] = mean(flows[-5:]) if len(flows) >= 5 else (mean(flows) if flows else None)
 
         avg_stage_flows[codigo] = {}
@@ -243,11 +233,10 @@ def compute_api_data(history):
                 "delta_ton": round(curr_frente['tmoli'] - previous['frentes'].get(codigo, {}).get('tmoli', curr_frente['tmoli']), 2) if previous else 0,
                 "history_points": len(historical_flows.get(codigo, []))
             },
-            "stages": {
-                'patio': {'flow_tph': round(avg_stage_flows[codigo]['patio'], 2)} if avg_stage_flows[codigo]['patio'] is not None else None,
-                'plantel': {'flow_tph': round(avg_stage_flows[codigo]['plantel'], 2)} if avg_stage_flows[codigo]['plantel'] is not None else None,
-                'molino': {'flow_tph': round(avg_stage_flows[codigo]['molino'], 2)} if avg_stage_flows[codigo]['molino'] is not None else None,
-            } if avg_stage_flows[codigo]['patio'] is not None or avg_stage_flows[codigo]['plantel'] is not None or avg_stage_flows[codigo]['molino'] is not None else None,
+            "stages": {stage: {
+                **_calculate_stage_flows(curr_frente)[stage],
+                'flow_tph': round(avg_stage_flows[codigo].get(stage), 2) if stage in ['patio', 'plantel', 'molino'] and avg_stage_flows[codigo].get(stage) is not None else None
+            } for stage in _calculate_stage_flows(curr_frente)},
             "status": status,
             "trend": trend
         }
@@ -267,18 +256,15 @@ def compute_api_data(history):
 
     # Calcular flujos globales por etapa: suma de flujos de cada frente
     # Como check: sum(frente_flows) == total_flow
-    global_stages = {}
+    global_stages = _calculate_stage_flows(current['total'])
     for stage in ['patio', 'plantel', 'molino']:
-        stage_sum = sum(
+        stage_flow_sum = sum(
             avg_stage_flows[codigo][stage]
             for codigo in avg_stage_flows.keys()
             if avg_stage_flows[codigo][stage] is not None
         )
-        if stage_sum > 0:
-            global_stages[stage] = {
-                'flow_tph': round(stage_sum, 2)
-            }
-    global_stages = global_stages if global_stages else None
+        if stage_flow_sum > 0:
+            global_stages[stage]['flow_tph'] = round(stage_flow_sum, 2)
 
     return {
         "meta": {
