@@ -91,21 +91,24 @@ def classify_trend(flow, avg_flow):
 
 
 def _calculate_stage_flows(curr_frente, prev_frente, elapsed_h):
-    """Calcula flujo en t/h para cada etapa del pipeline."""
+    """Calcula flujo en t/h SOLO para transiciones válidas: vienen→patio, patio→plantel, plantel→molino.
+    No se calcula para campo→vienen (múltiples viajes) ni molino→van (ya molido, transporte)."""
     if prev_frente is None or elapsed_h is None or elapsed_h <= 0:
         return None
 
-    stages = {
-        'campo': ('tcampo', 'ucampo'),
-        'vienen': ('tvienen', 'uvienen'),
-        'patio': ('tpatio', 'upatio'),
-        'plantel': ('tplantel', 'uplantel'),
-        'molino': ('tmoli', 'umoli'),
-        'van': ('tvan', 'uvan')
+    # Solo flujos válidos: la flecha muestra el flujo INTO el siguiente stage
+    # El flujo into PATIO es el cambio en patio (caña que entró desde vienen)
+    # El flujo into PLANTEL es el cambio en plantel (caña que entró desde patio)
+    # El flujo into MOLINO es el cambio en molino (caña que entró desde plantel)
+    result = {}
+
+    flow_transitions = {
+        'patio': ('tpatio', 'upatio'),      # flujo vienen → patio
+        'plantel': ('tplantel', 'uplantel'), # flujo patio → plantel
+        'molino': ('tmoli', 'umoli'),        # flujo plantel → molino
     }
 
-    result = {}
-    for stage_name, (t_key, u_key) in stages.items():
+    for stage_name, (t_key, u_key) in flow_transitions.items():
         curr_t = curr_frente.get(t_key, 0)
         prev_t = prev_frente.get(t_key, 0)
         delta_t = curr_t - prev_t

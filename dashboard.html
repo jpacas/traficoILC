@@ -630,26 +630,16 @@
                     arrow.setAttribute('stroke-linecap', 'round');
                     svgEl.appendChild(arrow);
 
-                    const nextVal = snapshot[stages[idx + 1].key] || 0;
                     const nextStage = stages[idx + 1].stage;
                     const flowTph = stageFlows && stageFlows[nextStage] ? stageFlows[nextStage].flow_tph : null;
 
-                    const textArrow = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    textArrow.setAttribute('x', (x + nodeWidth + nextX) / 2);
-                    textArrow.setAttribute('y', nodeY + nodeHeight / 2 - 12);
-                    textArrow.setAttribute('font-size', isDetail ? '11' : '12');
-                    textArrow.setAttribute('text-anchor', 'middle');
-                    textArrow.setAttribute('fill', 'var(--dim)');
-                    textArrow.setAttribute('font-weight', '600');
-                    textArrow.textContent = nextVal.toFixed(0) + 't';
-                    svgEl.appendChild(textArrow);
-
-                    // Mostrar flujo en t/h debajo de la flecha si está disponible
-                    if (flowTph !== null) {
+                    // Solo mostrar flujo (T/h) para transiciones válidas: vienen→patio, patio→plantel, plantel→molino
+                    // No mostrar flujo para campo→vienen (múltiples viajes) ni molino→van (ya molido)
+                    if (flowTph !== null && ['patio', 'plantel', 'molino'].includes(nextStage)) {
                         const textFlow = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                         textFlow.setAttribute('x', (x + nodeWidth + nextX) / 2);
-                        textFlow.setAttribute('y', nodeY + nodeHeight / 2 + 12);
-                        textFlow.setAttribute('font-size', isDetail ? '9' : '10');
+                        textFlow.setAttribute('y', nodeY + nodeHeight / 2);
+                        textFlow.setAttribute('font-size', isDetail ? '11' : '12');
                         textFlow.setAttribute('text-anchor', 'middle');
                         textFlow.setAttribute('fill', '#22c55e');
                         textFlow.setAttribute('font-weight', '700');
