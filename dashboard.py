@@ -106,22 +106,24 @@ def parse_fetch_time(fetch_time_str):
 
 
 def classify_status(flow, avg_flow, history_points):
-    if flow is None:
+    # Si no hay flujo actual, usar el promedio histórico como fallback
+    reference = flow if flow is not None else (avg_flow if history_points >= 3 else None)
+    if reference is None:
         return "unknown"
-    if history_points >= 3 and avg_flow is not None:
+    if flow is not None and history_points >= 3 and avg_flow is not None:
         if flow >= avg_flow * THRESHOLD_OK_REL:
             return "ok"
         elif flow >= avg_flow * THRESHOLD_LOW_REL:
             return "low"
         else:
             return "stop"
+    # Fallback a umbrales absolutos (flujo actual no disponible o historia insuficiente)
+    if reference > THRESHOLD_OK_ABS:
+        return "ok"
+    elif reference > THRESHOLD_LOW_ABS:
+        return "low"
     else:
-        if flow > THRESHOLD_OK_ABS:
-            return "ok"
-        elif flow > THRESHOLD_LOW_ABS:
-            return "low"
-        else:
-            return "stop" if flow == 0 else "low"
+        return "stop"
 
 
 def classify_trend(flow, avg_flow):
@@ -427,22 +429,37 @@ def compute_history_data(history):
 
         curr = history[i]
         prev = history[j]
-        frente_flows = {}
-        total_flow = 0.0
+        frente_flows        = {}
+        frente_vienen_flows = {}
+        total_flow   = 0.0
+        total_vienen = 0.0
 
         for codigo, curr_data in curr['frentes'].items():
             if codigo not in prev['frentes']:
                 continue
-            delta = curr_data['tmoli'] - prev['frentes'][codigo]['tmoli']
-            if delta >= 0:
-                flow = round(delta / elapsed_h, 2)
-                frente_flows[codigo] = flow
-                total_flow += flow
+            prev_data = prev['frentes'][codigo]
+            delta_moli    = curr_data['tmoli']    - prev_data['tmoli']
+            delta_plantel = curr_data['tplantel'] - prev_data['tplantel']
+            delta_patio   = curr_data['tpatio']   - prev_data['tpatio']
+            delta_vienen  = curr_data['tvienen']  - prev_data['tvienen']
+
+            if delta_moli >= 0:
+                flow_moli    = delta_moli / elapsed_h
+                flow_plantel = max(0.0, flow_moli    + delta_plantel / elapsed_h)
+                flow_patio   = max(0.0, flow_plantel + delta_patio   / elapsed_h)
+                flow_vienen  = max(0.0, flow_patio   + delta_vienen  / elapsed_h)
+
+                frente_flows[codigo]        = round(flow_moli,   2)
+                frente_vienen_flows[codigo] = round(flow_vienen, 2)
+                total_flow   += flow_moli
+                total_vienen += flow_vienen
 
         results.append({
-            'time': curr_ts.isoformat(),
-            'frentes': frente_flows,
-            'total_flow': round(total_flow, 2)
+            'time':           curr_ts.isoformat(),
+            'frentes':        frente_flows,
+            'frentes_vienen': frente_vienen_flows,
+            'total_flow':     round(total_flow,   2),
+            'total_vienen':   round(total_vienen, 2),
         })
 
     # Devolver últimos 288 puntos (24h a 5min = 288 lecturas)

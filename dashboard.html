@@ -814,40 +814,45 @@
                 return;
             }
 
-            const points = historyData.map(d => ({
-                time: new Date(d.time),
-                flow: frente === '__global__' ? d.total_flow : (d.frentes[frente] ?? null)
-            })).filter(p => p.flow !== null);
+            // Dos series: Molino y Vienen
+            const series = [
+                {
+                    label: 'Molino',
+                    color: '#16a34a',
+                    points: historyData.map(d => ({
+                        time: new Date(d.time),
+                        flow: frente === '__global__' ? d.total_flow : (d.frentes?.[frente] ?? null)
+                    })).filter(p => p.flow !== null)
+                },
+                {
+                    label: 'Vienen',
+                    color: '#d97706',
+                    points: historyData.map(d => ({
+                        time: new Date(d.time),
+                        flow: frente === '__global__' ? d.total_vienen : (d.frentes_vienen?.[frente] ?? null)
+                    })).filter(p => p.flow !== null)
+                }
+            ].filter(s => s.points.length >= 2);
 
-            if (points.length < 2) {
+            if (series.length === 0) {
                 area.innerHTML = '<div class="chart-no-data">Sin datos para este frente en las últimas 24h</div>';
                 return;
             }
 
-            const W = 800, H = 180, PAD = { top: 16, right: 16, bottom: 36, left: 50 };
+            const W = 800, H = 200, PAD = { top: 20, right: 60, bottom: 36, left: 50 };
             const chartW = W - PAD.left - PAD.right;
             const chartH = H - PAD.top  - PAD.bottom;
 
-            const times = points.map(p => p.time.getTime());
-            const flows = points.map(p => p.flow);
-            const tMin  = Math.min(...times);
-            const tMax  = Math.max(...times);
-            const fMax  = Math.max(...flows, 1);
-            const fAvg  = flows.reduce((a, b) => a + b, 0) / flows.length;
+            const allTimes = series.flatMap(s => s.points.map(p => p.time.getTime()));
+            const allFlows = series.flatMap(s => s.points.map(p => p.flow));
+            const tMin = Math.min(...allTimes);
+            const tMax = Math.max(...allTimes);
+            const fMax = Math.max(...allFlows, 1);
 
             const tx = t => PAD.left + ((t - tMin) / (tMax - tMin || 1)) * chartW;
             const ty = f => PAD.top  + (1 - f / fMax) * chartH;
 
-            // Polyline coords
-            const pts = points.map(p => `${tx(p.time.getTime()).toFixed(1)},${ty(p.flow).toFixed(1)}`).join(' ');
-
-            // Area path
-            const first = points[0], last = points[points.length - 1];
-            const areaPath = `M${tx(first.time.getTime()).toFixed(1)},${(PAD.top + chartH).toFixed(1)} ` +
-                points.map(p => `L${tx(p.time.getTime()).toFixed(1)},${ty(p.flow).toFixed(1)}`).join(' ') +
-                ` L${tx(last.time.getTime()).toFixed(1)},${(PAD.top + chartH).toFixed(1)} Z`;
-
-            // X axis tick marks — every 2 hours
+            // X axis ticks — every 2 hours
             const xTicks = [];
             const startHour = new Date(tMin);
             startHour.setMinutes(0, 0, 0);
@@ -860,42 +865,52 @@
                 }
             }
 
-            // Y axis ticks — 4 ticks
             const yTicks = [0, 0.25, 0.5, 0.75, 1.0].map(r => ({
                 y: ty(fMax * r),
                 label: (fMax * r).toFixed(0)
             }));
 
-            const color = frente === '__global__' ? 'var(--molino)' : 'var(--campo)';
-
-            const svg = `<svg class="history-chart" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+            // Render each series
+            const seriesSvg = series.map((s, idx) => {
+                const pts = s.points.map(p => `${tx(p.time.getTime()).toFixed(1)},${ty(p.flow).toFixed(1)}`).join(' ');
+                const first = s.points[0], last = s.points[s.points.length - 1];
+                const areaPath = `M${tx(first.time.getTime()).toFixed(1)},${(PAD.top + chartH).toFixed(1)} ` +
+                    s.points.map(p => `L${tx(p.time.getTime()).toFixed(1)},${ty(p.flow).toFixed(1)}`).join(' ') +
+                    ` L${tx(last.time.getTime()).toFixed(1)},${(PAD.top + chartH).toFixed(1)} Z`;
+                const fAvg = s.points.reduce((a, b) => a + b.flow, 0) / s.points.length;
+                const gradId = `grad${idx}`;
+                return `
                 <defs>
-                    <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="${color}" stop-opacity="0.25"/>
-                        <stop offset="100%" stop-color="${color}" stop-opacity="0.03"/>
+                    <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="${s.color}" stop-opacity="0.18"/>
+                        <stop offset="100%" stop-color="${s.color}" stop-opacity="0.02"/>
                     </linearGradient>
                 </defs>
+                <path d="${areaPath}" fill="url(#${gradId})"/>
+                <polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"
+                    stroke-linejoin="round" stroke-linecap="round"/>
+                <line x1="${PAD.left}" y1="${ty(fAvg).toFixed(1)}" x2="${PAD.left + chartW}" y2="${ty(fAvg).toFixed(1)}"
+                    stroke="${s.color}" stroke-width="1" stroke-dasharray="5,4" opacity="0.45"/>`;
+            }).join('');
 
+            // Legend (top-right)
+            const legendSvg = series.map((s, idx) => `
+                <rect x="${(W - PAD.right + 6).toFixed(0)}" y="${(PAD.top + idx * 18).toFixed(0)}"
+                    width="10" height="10" rx="2" fill="${s.color}" opacity="0.8"/>
+                <text x="${(W - PAD.right + 20).toFixed(0)}" y="${(PAD.top + idx * 18 + 9).toFixed(0)}"
+                    font-size="10" fill="#4a6b4a">${s.label}</text>`).join('');
+
+            const svg = `<svg class="history-chart" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
                 <!-- Y grid lines -->
                 ${yTicks.map(t => `<line x1="${PAD.left}" y1="${t.y.toFixed(1)}" x2="${PAD.left + chartW}" y2="${t.y.toFixed(1)}"
                     stroke="#c3d9c3" stroke-width="1" stroke-dasharray="4,3"/>`).join('\n')}
 
-                <!-- Area fill -->
-                <path d="${areaPath}" fill="url(#chartGrad)"/>
-
-                <!-- Line -->
-                <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-
-                <!-- Average line -->
-                <line x1="${PAD.left}" y1="${ty(fAvg).toFixed(1)}" x2="${PAD.left + chartW}" y2="${ty(fAvg).toFixed(1)}"
-                    stroke="${color}" stroke-width="1" stroke-dasharray="6,4" opacity="0.5"/>
-                <text x="${(PAD.left + chartW + 3).toFixed(0)}" y="${(ty(fAvg) + 4).toFixed(0)}"
-                    font-size="9" fill="${color}" opacity="0.7">avg</text>
+                ${seriesSvg}
 
                 <!-- Y axis labels -->
                 ${yTicks.map(t => `<text x="${(PAD.left - 5).toFixed(0)}" y="${(t.y + 4).toFixed(0)}"
                     text-anchor="end" font-size="10" fill="#4a6b4a">${t.label}</text>`).join('\n')}
-                <text x="${(PAD.left - 5).toFixed(0)}" y="${(PAD.top - 4).toFixed(0)}"
+                <text x="${(PAD.left - 5).toFixed(0)}" y="${(PAD.top - 5).toFixed(0)}"
                     text-anchor="end" font-size="9" fill="#4a6b4a">t/h</text>
 
                 <!-- X axis tick labels -->
@@ -909,6 +924,9 @@
                     stroke="#c3d9c3" stroke-width="1"/>
                 <line x1="${PAD.left}" y1="${PAD.top + chartH}" x2="${PAD.left + chartW}" y2="${PAD.top + chartH}"
                     stroke="#c3d9c3" stroke-width="1"/>
+
+                <!-- Legend -->
+                ${legendSvg}
             </svg>`;
 
             area.innerHTML = `<div class="svg-chart-wrap">${svg}</div>`;
