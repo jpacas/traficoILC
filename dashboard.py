@@ -75,6 +75,13 @@ def crosses_zafra_boundary(prev_ts, curr_ts):
     return zafra_day(prev_ts) != zafra_day(curr_ts)
 
 
+def is_zafra_transition(curr_ts):
+    """Devuelve True si la lectura está en la primera hora del nuevo día de zafra.
+    En ese período no existe un par válido de ~1h porque cruzaría el reset de las 7am."""
+    local = curr_ts + timedelta(hours=ZAFRA_UTC_OFFSET_H)
+    return ZAFRA_RESET_HOUR <= local.hour < ZAFRA_RESET_HOUR + 1
+
+
 def load_history():
     if not DATABASE_URL:
         return []
@@ -366,7 +373,8 @@ def compute_api_data(history):
             } for stage in _calculate_stage_flows(curr_frente)},
             "trend":    trend,
             "trend_3h": trend_3h,
-            "inactive": inactive
+            "inactive": inactive,
+            "zafra_transition": is_zafra_transition(timestamps[-1]) if timestamps else False
         }
 
     total_current_flow = sum(

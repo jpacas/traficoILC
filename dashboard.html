@@ -201,6 +201,10 @@
         .trend3h-badge.falling { background: rgba(220,38,38,0.12);  color: #b91c1c; border: 1px solid rgba(220,38,38,0.3); }
         .trend3h-badge.stable  { background: rgba(217,119,6,0.12);  color: #b45309; border: 1px solid rgba(217,119,6,0.3); }
 
+        .zafra-badge { background: #78350f; color: #fef3c7; font-size: 0.62rem; font-weight: 700; padding: 2px 7px; border-radius: 9px; white-space: nowrap; }
+        .nuevo-badge { background: #1e40af; color: #dbeafe; font-size: 0.62rem; font-weight: 700; padding: 2px 7px; border-radius: 9px; white-space: nowrap; }
+
+
         .frente-body { padding: 14px 16px 4px; }
 
         .expand-icon { font-size: 1rem; color: var(--dim); transition: transform 0.3s; flex-shrink: 0; }
@@ -209,7 +213,7 @@
         /* ── Stage flow grid (main card content) ── */
         .stage-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 6px;
             margin-bottom: 10px;
         }
@@ -223,11 +227,10 @@
             border: 1px solid;
             text-align: center;
         }
-        .stage-item-campo   { color: var(--campo);   background: rgba(37,99,235,0.07);  border-color: rgba(37,99,235,0.2); }
-        .stage-item-vienen  { color: var(--vienen);  background: rgba(217,119,6,0.07);  border-color: rgba(217,119,6,0.2); }
-        .stage-item-patio   { color: var(--patio);   background: rgba(124,58,237,0.07); border-color: rgba(124,58,237,0.2); }
-        .stage-item-plantel { color: var(--plantel); background: rgba(219,39,119,0.07); border-color: rgba(219,39,119,0.2); }
-        .stage-item-molino  { color: var(--molino);  background: rgba(22,163,74,0.07);  border-color: rgba(22,163,74,0.2); }
+        .stage-item-campo      { color: var(--campo);   background: rgba(37,99,235,0.07);  border-color: rgba(37,99,235,0.2); }
+        .stage-item-vienen     { color: var(--vienen);  background: rgba(217,119,6,0.07);  border-color: rgba(217,119,6,0.2); }
+        .stage-item-inventario { color: var(--patio);   background: rgba(124,58,237,0.07); border-color: rgba(124,58,237,0.2); }
+        .stage-item-molino     { color: var(--molino);  background: rgba(22,163,74,0.07);  border-color: rgba(22,163,74,0.2); }
         .stage-item-label {
             font-size: 0.6rem;
             font-weight: 700;
@@ -308,7 +311,7 @@
 
         .stage-flows-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 8px;
         }
         .stage-flow-box {
@@ -547,62 +550,78 @@
 
         // ── Pipeline HTML renderer ──
         function drawPipeline(container, snapshot, stageFlows) {
-            const stages = [
-                { tKey: 'tcampo',   uKey: 'ucampo',   label: 'Campo',   icon: '🌾', color: 'var(--campo)',   nextFlow: 'vienen'  },
-                { tKey: 'tvienen',  uKey: 'uvienen',  label: 'Vienen',  icon: '🚚', color: 'var(--vienen)',  nextFlow: 'patio'   },
-                { tKey: 'tpatio',   uKey: 'upatio',   label: 'Patio',   icon: '📦', color: 'var(--patio)',   nextFlow: 'plantel' },
-                { tKey: 'tplantel', uKey: 'uplantel', label: 'Plantel', icon: '🏭', color: 'var(--plantel)', nextFlow: 'molino'  },
-                { tKey: 'tmoli',    uKey: 'umoli',    label: 'Molino',  icon: '⚙️', color: 'var(--molino)',  nextFlow: null      },
-            ];
-
-            const parts = stages.map(s => {
-                const tons  = (snapshot[s.tKey] || 0).toFixed(0);
-                const units = snapshot[s.uKey] || 0;
-                const node  = `<div class="pl-node" style="--c:${s.color}">
-                    <div class="pl-icon">${s.icon}</div>
+            const mkNode = (color, icon, label, tons, units) =>
+                `<div class="pl-node" style="--c:${color}">
+                    <div class="pl-icon">${icon}</div>
                     <div>
-                        <div class="pl-label">${s.label}</div>
-                        <div class="pl-tons">${tons}<span class="pl-unit">t</span></div>
-                        <div class="pl-units">${units}u</div>
+                        <div class="pl-label">${label}</div>
+                        <div class="pl-tons">${(tons||0).toFixed(0)}<span class="pl-unit">t</span></div>
+                        <div class="pl-units">${units||0}u</div>
                     </div>
                 </div>`;
-
-                if (!s.nextFlow) return node;
-
-                const tph  = stageFlows?.[s.nextFlow]?.flow_tph;
-                const conn = `<div class="pl-conn">
+            const mkConn = tph =>
+                `<div class="pl-conn">
                     ${tph != null ? `<span class="pl-flow">${tph.toFixed(1)} t/h</span>` : ''}
                     <span class="pl-arrow">→</span>
                 </div>`;
-                return node + conn;
-            }).join('');
+            const mkVienConn = (tph, ucam) =>
+                `<div class="pl-conn" style="min-width:72px;">
+                    ${tph != null ? `<span class="pl-flow" style="background:rgba(217,119,6,0.12);color:var(--vienen);">🚚 ${tph.toFixed(1)} t/h</span>` : '<span class="pl-arrow" style="color:var(--vienen)">🚚</span>'}
+                    <span class="pl-arrow">→</span>
+                    ${ucam > 0 ? `<span style="font-size:0.56rem;color:var(--dim);">${ucam}u transit.</span>` : ''}
+                </div>`;
+
+            const tInv = (snapshot.tpatio || 0) + (snapshot.tplantel || 0);
+            const uInv = (snapshot.upatio || 0) + (snapshot.uplantel || 0);
+
+            const parts = [
+                mkNode('var(--campo)',  '🌾', 'Campo',      snapshot.tcampo, snapshot.ucampo),
+                mkVienConn(stageFlows?.vienen?.flow_tph, snapshot.uvienen || 0),
+                mkNode('var(--patio)', '📦', 'Inventario',  tInv,            uInv),
+                mkConn(stageFlows?.molino?.flow_tph),
+                mkNode('var(--molino)','⚙️', 'Molino',     snapshot.tmoli,  snapshot.umoli),
+            ].join('');
 
             container.innerHTML = `<div class="pl-row">${parts}</div>`;
         }
 
         // ── Stage flow grid ──
         function renderStageGrid(stages) {
-            const stageList = [
-                { key: 'campo',   label: 'Campo',   cls: 'stage-item-campo'   },
-                { key: 'vienen',  label: 'Vienen',  cls: 'stage-item-vienen'  },
-                { key: 'plantel', label: 'Plantel', cls: 'stage-item-plantel' },
-                { key: 'patio',   label: 'Patio',   cls: 'stage-item-patio'   },
-                { key: 'molino',  label: 'Molino',  cls: 'stage-item-molino'  },
-            ];
             const fmtT = t => t >= 1000 ? (t / 1000).toFixed(1) + 'k' : Math.round(t) + '';
-            return stageList.map(s => {
-                const st   = stages?.[s.key];
-                const tph  = st?.flow_tph;
-                const tons = st?.current_t ?? 0;
-                const units = st?.current_u ?? 0;
-                const flowVal = tph != null ? tph.toFixed(0) : '—';
-                return `<div class="stage-item ${s.cls}">
-                    <span class="stage-item-label">${s.label}</span>
-                    <span class="stage-item-value">${flowVal}</span>
-                    <span class="stage-item-unit">t/h</span>
-                    <span class="stage-item-stock">${units}u · ${fmtT(tons)}t</span>
-                </div>`;
-            }).join('');
+
+            // Campo
+            const campo = stages?.campo;
+            const campoTph = campo?.flow_tph;
+
+            // Vienen: solo flujo, no inventario
+            const vienen = stages?.vienen;
+            const vienTph = vienen?.flow_tph;
+            const vienU   = vienen?.current_u ?? 0;
+
+            // Inventario combinado: patio + plantel
+            const patio   = stages?.patio;
+            const plantel = stages?.plantel;
+            const invTph  = patio?.flow_tph;  // flujo de entrada al inventario
+            const invT    = (patio?.current_t ?? 0) + (plantel?.current_t ?? 0);
+            const invU    = (patio?.current_u ?? 0) + (plantel?.current_u ?? 0);
+
+            // Molino
+            const molino = stages?.molino;
+            const moliTph = molino?.flow_tph;
+
+            const items = [
+                { cls: 'stage-item-campo',      label: 'Campo',      tph: campoTph, stock: `${campo?.current_u ?? 0}u · ${fmtT(campo?.current_t ?? 0)}t` },
+                { cls: 'stage-item-vienen',     label: 'En tránsito',tph: vienTph,  stock: `${vienU} camiones` },
+                { cls: 'stage-item-inventario', label: 'Inventario', tph: invTph,   stock: `${invU}u · ${fmtT(invT)}t` },
+                { cls: 'stage-item-molino',     label: 'Molino',     tph: moliTph,  stock: `${molino?.current_u ?? 0}u · ${fmtT(molino?.current_t ?? 0)}t` },
+            ];
+
+            return items.map(s => `<div class="stage-item ${s.cls}">
+                <span class="stage-item-label">${s.label}</span>
+                <span class="stage-item-value">${s.tph != null ? s.tph.toFixed(0) : '—'}</span>
+                <span class="stage-item-unit">t/h</span>
+                <span class="stage-item-stock">${s.stock}</span>
+            </div>`).join('');
         }
 
         // ── Trend_3h badge ──
@@ -683,23 +702,27 @@
                 const avgFlow = f.flow.avg_tph || 0;
                 const diff    = flow - avgFlow;
 
-                // Stage flow boxes (detail)
+                // Stage flow boxes (detail): campo, vienen(flujo), inventario(patio+plantel), molino
+                const invTphDetail = f.stages?.patio?.flow_tph ?? null;
                 const stageBoxes = [
-                    { key: 'campo',   label: 'Campo',   color: 'var(--campo)'   },
-                    { key: 'vienen',  label: 'Vienen',  color: 'var(--vienen)'  },
-                    { key: 'plantel', label: 'Plantel', color: 'var(--plantel)' },
-                    { key: 'patio',   label: 'Patio',   color: 'var(--patio)'   },
-                    { key: 'molino',  label: 'Molino',  color: 'var(--molino)'  },
-                ].map(s => {
-                    const tph = f.stages?.[s.key]?.flow_tph ?? null;
-                    return `<div class="stage-flow-box" style="border-top:3px solid ${s.color}">
+                    { label: 'Campo',       color: 'var(--campo)',  tph: f.stages?.campo?.flow_tph  ?? null, sub: null },
+                    { label: 'Vienen',      color: 'var(--vienen)', tph: f.stages?.vienen?.flow_tph ?? null, sub: `${f.stages?.vienen?.current_u ?? 0} cam.` },
+                    { label: 'Inventario',  color: 'var(--patio)',  tph: invTphDetail,                        sub: null },
+                    { label: 'Molino',      color: 'var(--molino)', tph: f.stages?.molino?.flow_tph ?? null, sub: null },
+                ].map(s => `<div class="stage-flow-box" style="border-top:3px solid ${s.color}">
                         <div class="stat-label">${s.label}</div>
-                        <div class="stat-value" style="color:${tph !== null && tph > 0 ? s.color : 'var(--dim)'}">
-                            ${tph !== null ? tph.toFixed(1) : '—'}
+                        <div class="stat-value" style="color:${s.tph !== null && s.tph > 0 ? s.color : 'var(--dim)'}">
+                            ${s.tph !== null ? s.tph.toFixed(1) : '—'}
                         </div>
-                        <div class="stat-subtext">t/h</div>
-                    </div>`;
-                }).join('');
+                        <div class="stat-subtext">${s.sub ?? 't/h'}</div>
+                    </div>`).join('');
+
+                const zafraBadge = f.zafra_transition
+                    ? '<span class="zafra-badge">⏳ Reinicio 7am</span>'
+                    : '';
+                const nuevoBadge = f.flow.history_points === 0
+                    ? '<span class="nuevo-badge">Nuevo</span>'
+                    : '';
 
                 const card = document.createElement('div');
                 card.className = 'frente-card' + (f.inactive ? ' inactive' : '');
@@ -709,6 +732,7 @@
                             <div class="frente-code">[${codigo}]</div>
                             <div class="frente-name">${f.nombre}</div>
                         </div>
+                        <div style="display:flex;gap:4px;flex-shrink:0;">${zafraBadge}${nuevoBadge}</div>
                     </div>
 
                     <div class="frente-body">
