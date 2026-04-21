@@ -210,54 +210,7 @@
         .expand-icon { font-size: 1rem; color: var(--dim); transition: transform 0.3s; flex-shrink: 0; }
         .frente-card.expanded .expand-icon { transform: rotate(180deg); }
 
-        /* ── Stage flow grid (main card content) ── */
-        .stage-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-            margin-bottom: 10px;
-        }
-        .stage-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            padding: 8px 4px;
-            border-radius: 8px;
-            border: 1px solid;
-            text-align: center;
-        }
-        .stage-item-campo      { color: var(--campo);   background: rgba(37,99,235,0.07);  border-color: rgba(37,99,235,0.2); }
-        .stage-item-vienen     { color: var(--vienen);  background: rgba(217,119,6,0.07);  border-color: rgba(217,119,6,0.2); }
-        .stage-item-inventario { color: var(--patio);   background: rgba(124,58,237,0.07); border-color: rgba(124,58,237,0.2); }
-        .stage-item-molino     { color: var(--molino);  background: rgba(22,163,74,0.07);  border-color: rgba(22,163,74,0.2); }
-        .stage-item-label {
-            font-size: 0.6rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            opacity: 0.75;
-        }
-        .stage-item-value {
-            font-size: 1.05rem;
-            font-weight: 700;
-            font-family: monospace;
-            line-height: 1.1;
-        }
-        .stage-item-unit {
-            font-size: 0.6rem;
-            opacity: 0.65;
-        }
-        .stage-item-stock {
-            font-size: 0.58rem;
-            opacity: 0.55;
-            font-family: monospace;
-            white-space: nowrap;
-            margin-top: 2px;
-            line-height: 1.2;
-        }
-
-        /* ── Trend row (below stage grid) ── */
+        /* ── Trend row (below pipeline) ── */
         .trend-row {
             display: flex;
             align-items: center;
@@ -425,16 +378,19 @@
             .frentes-list   { grid-template-columns: 1fr; gap: 10px; }
             .frente-card.expanded { grid-column: 1; }
 
-            .stage-item-value  { font-size: 0.9rem; }
             .detail-stats      { grid-template-columns: repeat(2, 1fr); }
             .stage-flows-grid  { grid-template-columns: repeat(2, 1fr); }
             .stat-value        { font-size: 1.25rem; }
         }
 
+        .label-mobile { display: none; }
+
         /* ══════════════════════════════════════════
            RESPONSIVE — MOBILE ≤480px
         ══════════════════════════════════════════ */
         @media (max-width: 480px) {
+            .label-desktop { display: none; }
+            .label-mobile  { display: inline; }
             .container   { padding: 0 8px 12px; }
             header       { padding: 8px 10px; }
             .header-inner { gap: 4px; }
@@ -466,13 +422,6 @@
             .frente-body   { padding: 10px 11px 4px; }
             .badge         { padding: 3px 7px; font-size: 0.67rem; }
             .badge-inactive { font-size: 0.62rem; padding: 2px 6px; }
-
-            /* Stage grid: 3 cols → 5 items = 3+2 rows */
-            .stage-grid        { grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 8px; }
-            .stage-item        { padding: 7px 3px; border-radius: 6px; }
-            .stage-item-label  { font-size: 0.55rem; }
-            .stage-item-value  { font-size: 0.82rem; }
-            .stage-item-unit   { font-size: 0.53rem; }
 
             .trend-row       { padding: 5px 0 8px; }
             .trend-row-label { font-size: 0.62rem; }
@@ -577,51 +526,12 @@
             const parts = [
                 mkNode('var(--campo)',  '🌾', 'Campo',      snapshot.tcampo, snapshot.ucampo),
                 mkVienConn(stageFlows?.vienen?.flow_tph, snapshot.uvienen || 0),
-                mkNode('var(--patio)', '📦', 'Inventario',  tInv,            uInv),
+                mkNode('var(--patio)', '📦', '<span class="label-desktop">Patio + Plantel</span><span class="label-mobile">PP</span>', tInv, uInv),
                 mkConn(stageFlows?.molino?.flow_tph),
                 mkNode('var(--molino)','⚙️', 'Molino',     snapshot.tmoli,  snapshot.umoli),
             ].join('');
 
             container.innerHTML = `<div class="pl-row">${parts}</div>`;
-        }
-
-        // ── Stage flow grid ──
-        function renderStageGrid(stages) {
-            const fmtT = t => t >= 1000 ? (t / 1000).toFixed(1) + 'k' : Math.round(t) + '';
-
-            // Campo
-            const campo = stages?.campo;
-            const campoTph = campo?.flow_tph;
-
-            // Vienen: solo flujo, no inventario
-            const vienen = stages?.vienen;
-            const vienTph = vienen?.flow_tph;
-            const vienU   = vienen?.current_u ?? 0;
-
-            // Inventario combinado: patio + plantel
-            const patio   = stages?.patio;
-            const plantel = stages?.plantel;
-            const invTph  = patio?.flow_tph;  // flujo de entrada al inventario
-            const invT    = (patio?.current_t ?? 0) + (plantel?.current_t ?? 0);
-            const invU    = (patio?.current_u ?? 0) + (plantel?.current_u ?? 0);
-
-            // Molino
-            const molino = stages?.molino;
-            const moliTph = molino?.flow_tph;
-
-            const items = [
-                { cls: 'stage-item-campo',      label: 'Campo',      tph: campoTph, stock: `${campo?.current_u ?? 0}u · ${fmtT(campo?.current_t ?? 0)}t` },
-                { cls: 'stage-item-vienen',     label: 'En tránsito',tph: vienTph,  stock: `${vienU} camiones` },
-                { cls: 'stage-item-inventario', label: 'Inventario', tph: invTph,   stock: `${invU}u · ${fmtT(invT)}t` },
-                { cls: 'stage-item-molino',     label: 'Molino',     tph: moliTph,  stock: `${molino?.current_u ?? 0}u · ${fmtT(molino?.current_t ?? 0)}t` },
-            ];
-
-            return items.map(s => `<div class="stage-item ${s.cls}">
-                <span class="stage-item-label">${s.label}</span>
-                <span class="stage-item-value">${s.tph != null ? s.tph.toFixed(0) : '—'}</span>
-                <span class="stage-item-unit">t/h</span>
-                <span class="stage-item-stock">${s.stock}</span>
-            </div>`).join('');
         }
 
         // ── Trend_3h badge ──
@@ -707,7 +617,7 @@
                 const stageBoxes = [
                     { label: 'Campo',       color: 'var(--campo)',  tph: f.stages?.campo?.flow_tph  ?? null, sub: null },
                     { label: 'Vienen',      color: 'var(--vienen)', tph: f.stages?.vienen?.flow_tph ?? null, sub: `${f.stages?.vienen?.current_u ?? 0} cam.` },
-                    { label: 'Inventario',  color: 'var(--patio)',  tph: invTphDetail,                        sub: null },
+                    { label: '<span class="label-desktop">Patio + Plantel</span><span class="label-mobile">PP</span>', color: 'var(--patio)', tph: invTphDetail, sub: null },
                     { label: 'Molino',      color: 'var(--molino)', tph: f.stages?.molino?.flow_tph ?? null, sub: null },
                 ].map(s => `<div class="stage-flow-box" style="border-top:3px solid ${s.color}">
                         <div class="stat-label">${s.label}</div>
@@ -736,9 +646,7 @@
                     </div>
 
                     <div class="frente-body">
-                        <div class="stage-grid">
-                            ${renderStageGrid(f.stages)}
-                        </div>
+                        <div class="frente-pipeline-body"></div>
                         <div class="trend-row">
                             <span class="trend-row-label">Tendencia 3h</span>
                             <div style="display:flex;align-items:center;gap:8px;">
@@ -749,11 +657,6 @@
                     </div>
 
                     <div class="frente-detail">
-                        <div class="detail-section">
-                            <h3>Pipeline del Frente</h3>
-                            <div class="frente-pipeline"></div>
-                        </div>
-
                         <div class="detail-section">
                             <h3>Flujos por Etapa — Balance de Masa (t/h)</h3>
                             <div class="stage-flows-grid">${stageBoxes}</div>
@@ -784,15 +687,11 @@
                     </div>
                 `;
 
+                const bodyPipeEl = card.querySelector('.frente-pipeline-body');
+                if (bodyPipeEl) drawPipeline(bodyPipeEl, f.snapshot, f.stages);
+
                 card.addEventListener('click', () => {
                     card.classList.toggle('expanded');
-                    if (card.classList.contains('expanded')) {
-                        const pipelineEl = card.querySelector('.frente-pipeline');
-                        if (pipelineEl && !pipelineEl.dataset.drawn) {
-                            drawPipeline(pipelineEl, f.snapshot, f.stages);
-                            pipelineEl.dataset.drawn = '1';
-                        }
-                    }
                 });
 
                 list.appendChild(card);
