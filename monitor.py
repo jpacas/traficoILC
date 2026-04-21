@@ -202,7 +202,7 @@ def save_reading(reading):
 
         cur.execute("""
             DELETE FROM readings WHERE id NOT IN (
-                SELECT id FROM readings ORDER BY fetch_time DESC LIMIT 100
+                SELECT id FROM readings ORDER BY fetch_time DESC LIMIT 300
             )
         """)
 
@@ -340,28 +340,18 @@ def main():
             time.sleep(RETRY_INTERVAL)
             continue
 
-        # Detectar si hay datos nuevos: comparar timestamp O si los datos cambiaron
-        prev_reading = history[-1] if history else None
-        timestamp_changed = reading['timestamp'] != last_timestamp
-        data_has_changed = data_changed(reading, prev_reading)
-
-        if not timestamp_changed and not data_has_changed:
-            print(f"[{datetime.now().strftime('%H:%M:%S')}] Sin cambios. Reintentando en {RETRY_INTERVAL}s...")
-            time.sleep(RETRY_INTERVAL)
-            continue
-
-        # Datos nuevos — guardar y calcular flujo
+        # Siempre guardar: fetch_time es único por llamada, así el cálculo 1h
+        # siempre encuentra su par histórico aunque la fuente no haya cambiado.
+        source_changed = reading['timestamp'] != last_timestamp
         last_timestamp = reading['timestamp']
         save_reading(reading)
         history = load_history()
 
         display_report(reading)
+        print(f"  [fuente {'actualizada' if source_changed else 'sin cambios'}]")
 
-        # Calcular flujo si tenemos histórico
         if len(history) >= 2:
-            flow = calculate_flow(history[-1], history[-2])
-            print("\n  (Flujo calculado respecto a la lectura anterior)")
-            print("  Columnas: Código | Frente | TMoli actual | TCampo | TVienen | ΔTon | Flujo(ton/h)")
+            calculate_flow(history[-1], history[-2])
         else:
             print("\n  (Primera lectura — no hay delta disponible aún)")
 
