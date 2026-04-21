@@ -298,10 +298,12 @@ def compute_api_data(history):
 
         flow_series = list(zip(historical_flow_ts[codigo], historical_flows[codigo]))
         trend_3h = classify_trend_3h(flow_series, timestamps[-1])
-        # Inactivo si no hay ninguna unidad en ninguna etapa del pipeline
-        has_trucks = any(curr_frente.get(u, 0) > 0
-                         for u in ['ucampo', 'uvienen', 'upatio', 'uplantel', 'umoli'])
-        inactive = not has_trucks
+        # Inactivo si no hay flujo significativo en ninguna etapa (ni actual ni promedio histórico)
+        # Corresponde a que todos los chips del frente muestran "—" o 0
+        chip_flows = [flow_tph, avg_tph] + [
+            avg_stage_flows[codigo].get(s) for s in ['campo', 'vienen', 'plantel', 'patio']
+        ]
+        inactive = not any(f is not None and f > 0.5 for f in chip_flows)
 
         frentes_data[codigo] = {
             "codigo": codigo,
