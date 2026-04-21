@@ -234,48 +234,67 @@
         .trend3h-badge.falling { background: rgba(220,38,38,0.12);  color: #b91c1c; border: 1px solid rgba(220,38,38,0.3); }
         .trend3h-badge.stable  { background: rgba(217,119,6,0.12);  color: #b45309; border: 1px solid rgba(217,119,6,0.3); }
 
-        .frente-body { padding: 12px 16px 14px; }
+        .frente-body { padding: 14px 16px 4px; }
 
-        .frente-flow {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            background: rgba(238,244,238,0.6);
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            margin-bottom: 10px;
-        }
-        .flow-value { display: flex; flex-direction: column; gap: 1px; }
-        .flow-label { font-size: 0.68rem; color: var(--dim); text-transform: uppercase; font-weight: 600; }
-        .flow-number { font-size: 1.8rem; font-weight: 700; font-family: monospace; color: var(--molino); line-height: 1.1; }
-        .flow-unit   { font-size: 0.78rem; color: var(--dim); }
-
-        .flow-bar { flex: 1; margin: 0 10px; height: 7px; background: rgba(195,217,195,0.5); border-radius: 4px; overflow: hidden; }
-        .flow-bar-fill { height: 100%; background: linear-gradient(90deg, var(--molino), #15803d); border-radius: 4px; transition: width 0.3s; }
-
-        .expand-icon { font-size: 1.1rem; color: var(--dim); margin-left: 6px; transition: transform 0.3s; }
+        .expand-icon { font-size: 1rem; color: var(--dim); transition: transform 0.3s; flex-shrink: 0; }
         .frente-card.expanded .expand-icon { transform: rotate(180deg); }
 
-        /* ── Stage chips (collapsed view) ── */
-        .stage-chips {
+        /* ── Stage flow grid (main card content) ── */
+        .stage-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .stage-item {
             display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-        .chip {
-            font-size: 0.68rem;
-            font-weight: 600;
-            padding: 3px 8px;
-            border-radius: 12px;
-            white-space: nowrap;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 8px 4px;
+            border-radius: 8px;
             border: 1px solid;
+            text-align: center;
         }
-        .chip-campo   { color: var(--campo);   background: rgba(37,99,235,0.08);  border-color: rgba(37,99,235,0.25); }
-        .chip-vienen  { color: var(--vienen);  background: rgba(217,119,6,0.08);  border-color: rgba(217,119,6,0.25); }
-        .chip-patio   { color: var(--patio);   background: rgba(124,58,237,0.08); border-color: rgba(124,58,237,0.25); }
-        .chip-plantel { color: var(--plantel); background: rgba(219,39,119,0.08); border-color: rgba(219,39,119,0.25); }
-        .chip-molino  { color: var(--molino);  background: rgba(22,163,74,0.08);  border-color: rgba(22,163,74,0.25); }
+        .stage-item-campo   { color: var(--campo);   background: rgba(37,99,235,0.07);  border-color: rgba(37,99,235,0.2); }
+        .stage-item-vienen  { color: var(--vienen);  background: rgba(217,119,6,0.07);  border-color: rgba(217,119,6,0.2); }
+        .stage-item-patio   { color: var(--patio);   background: rgba(124,58,237,0.07); border-color: rgba(124,58,237,0.2); }
+        .stage-item-plantel { color: var(--plantel); background: rgba(219,39,119,0.07); border-color: rgba(219,39,119,0.2); }
+        .stage-item-molino  { color: var(--molino);  background: rgba(22,163,74,0.07);  border-color: rgba(22,163,74,0.2); }
+        .stage-item-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            opacity: 0.75;
+        }
+        .stage-item-value {
+            font-size: 1.05rem;
+            font-weight: 700;
+            font-family: monospace;
+            line-height: 1.1;
+        }
+        .stage-item-unit {
+            font-size: 0.6rem;
+            opacity: 0.65;
+        }
+
+        /* ── Trend row (below stage grid) ── */
+        .trend-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0 10px;
+            border-top: 1px solid var(--border);
+            margin-top: 2px;
+        }
+        .trend-row-label {
+            font-size: 0.7rem;
+            color: var(--dim);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
 
         /* ── Detail panel ── */
         .frente-detail {
@@ -430,9 +449,9 @@
             .frentes-list { grid-template-columns: 1fr; }
             .detail-stats { grid-template-columns: repeat(2, 1fr); }
             .stage-flows-grid { grid-template-columns: repeat(2, 1fr); }
-            .flow-number { font-size: 1.6rem; }
             .stat-value  { font-size: 1.3rem; }
             .frente-card.expanded { grid-column: 1; }
+            .stage-item-value { font-size: 0.9rem; }
         }
 
         @media (max-width: 480px) {
@@ -440,6 +459,8 @@
             .frente-name  { font-size: 0.92rem; }
             .badge { padding: 3px 7px; font-size: 0.7rem; }
             .stage-flows-grid { grid-template-columns: 1fr; }
+            .stage-grid { grid-template-columns: repeat(3, 1fr); }
+            .stage-item-value { font-size: 0.85rem; }
         }
     </style>
 </head>
@@ -531,25 +552,34 @@
             container.innerHTML = `<div class="pl-row">${parts}</div>`;
         }
 
-        // ── Stage chips for collapsed view ──
-        function renderStageChips(stages) {
+        // ── Status label (español) ──
+        function statusLabel(status) {
+            return { ok: 'ACTIVO', low: 'BAJO', stop: 'PARADO', unknown: 'SIN DATOS' }[status] || status.toUpperCase();
+        }
+
+        // ── Stage flow grid ──
+        function renderStageGrid(stages) {
             const stageList = [
-                { key: 'campo',   label: 'Campo',   cls: 'chip-campo'   },
-                { key: 'vienen',  label: 'Vienen',  cls: 'chip-vienen'  },
-                { key: 'patio',   label: 'Patio',   cls: 'chip-patio'   },
-                { key: 'plantel', label: 'Plantel', cls: 'chip-plantel' },
-                { key: 'molino',  label: 'Molino',  cls: 'chip-molino'  },
+                { key: 'campo',   label: 'Campo',   cls: 'stage-item-campo'   },
+                { key: 'vienen',  label: 'Vienen',  cls: 'stage-item-vienen'  },
+                { key: 'patio',   label: 'Patio',   cls: 'stage-item-patio'   },
+                { key: 'plantel', label: 'Plantel', cls: 'stage-item-plantel' },
+                { key: 'molino',  label: 'Molino',  cls: 'stage-item-molino'  },
             ];
             return stageList.map(s => {
                 const tph = stages?.[s.key]?.flow_tph;
-                const val = tph != null ? `${tph.toFixed(0)} t/h` : '—';
-                return `<span class="chip ${s.cls}">${s.label}: ${val}</span>`;
+                const val = tph != null ? tph.toFixed(0) : '—';
+                return `<div class="stage-item ${s.cls}">
+                    <span class="stage-item-label">${s.label}</span>
+                    <span class="stage-item-value">${val}</span>
+                    <span class="stage-item-unit">t/h</span>
+                </div>`;
             }).join('');
         }
 
         // ── Trend_3h badge ──
         function renderTrend3h(trend3h) {
-            if (!trend3h || trend3h === 'unknown') return '';
+            if (!trend3h || trend3h === 'unknown') return '<span style="color:var(--dim);font-size:0.7rem;">—</span>';
             const labels = { rising: '↑ Subiendo', falling: '↓ Bajando', stable: '→ Estable' };
             return `<span class="trend3h-badge ${trend3h}">${labels[trend3h] || trend3h}</span>`;
         }
@@ -620,15 +650,10 @@
             const inactive = entries.filter(([, f]) => f.inactive);
             const sorted   = [...active, ...inactive];
 
-            const maxFlow = Math.max(...Object.values(data.frentes).map(f => f.flow.current_tph || 0), 100);
-
             sorted.forEach(([codigo, f]) => {
-                const flow      = f.flow.current_tph || 0;
-                const flowWidth = Math.max(2, (flow / maxFlow) * 100);
-                const avgFlow   = f.flow.avg_tph || 0;
-                const diff      = flow - avgFlow;
-                const trendClass  = f.trend === 'up' ? 'up' : f.trend === 'down' ? 'down' : 'stable';
-                const trendSymbol = f.trend === 'up' ? '↑' : f.trend === 'down' ? '↓' : '→';
+                const flow    = f.flow.current_tph || 0;
+                const avgFlow = f.flow.avg_tph || 0;
+                const diff    = flow - avgFlow;
 
                 // Stage flow boxes (detail)
                 const stageBoxes = [
@@ -658,26 +683,20 @@
                         </div>
                         <div class="frente-badges">
                             ${f.inactive ? '<span class="badge-inactive">INACTIVO</span>' : ''}
-                            <div class="badge ${f.status}">${f.status.toUpperCase()}</div>
-                            <div class="trend-badge ${trendClass}">${trendSymbol}</div>
+                            <div class="badge ${f.status}">${statusLabel(f.status)}</div>
                         </div>
                     </div>
 
                     <div class="frente-body">
-                        <div class="frente-flow">
-                            <div class="flow-value">
-                                <div class="flow-label">Flujo al Molino</div>
-                                <div class="flow-number">${flow.toFixed(0)}</div>
-                                <div class="flow-unit">t/h</div>
-                            </div>
-                            <div class="flow-bar">
-                                <div class="flow-bar-fill" style="width:${flowWidth}%"></div>
-                            </div>
-                            <div class="expand-icon">▼</div>
+                        <div class="stage-grid">
+                            ${renderStageGrid(f.stages)}
                         </div>
-                        <div class="stage-chips">
-                            ${renderStageChips(f.stages)}
-                            ${renderTrend3h(f.trend_3h)}
+                        <div class="trend-row">
+                            <span class="trend-row-label">Tendencia 3h</span>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                ${renderTrend3h(f.trend_3h)}
+                                <span class="expand-icon">▼</span>
+                            </div>
                         </div>
                     </div>
 
@@ -701,7 +720,7 @@
                                     <div class="stat-subtext">t/h</div>
                                 </div>
                                 <div class="stat-box">
-                                    <div class="stat-label">Promedio</div>
+                                    <div class="stat-label">Promedio histórico</div>
                                     <div class="stat-value">${avgFlow.toFixed(1)}</div>
                                     <div class="stat-subtext">${f.flow.history_points} lecturas</div>
                                 </div>
@@ -710,7 +729,7 @@
                                     <div class="stat-value" style="color:${diff >= 0 ? 'var(--ok)' : 'var(--stop)'}">
                                         ${diff >= 0 ? '+' : ''}${diff.toFixed(1)}
                                     </div>
-                                    <div class="stat-subtext">Tendencia 3h: ${f.trend_3h || '—'}</div>
+                                    <div class="stat-subtext">vs promedio</div>
                                 </div>
                             </div>
                         </div>

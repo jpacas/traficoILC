@@ -3,7 +3,8 @@
     "allow": [
       "Skill(browse)",
       "Skill(gstack-upgrade)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(node -e ' *)"
     ]
   }
 }

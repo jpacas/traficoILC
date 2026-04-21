@@ -298,7 +298,10 @@ def compute_api_data(history):
 
         flow_series = list(zip(historical_flow_ts[codigo], historical_flows[codigo]))
         trend_3h = classify_trend_3h(flow_series, timestamps[-1])
-        inactive = (status == "stop") and history_pts >= 3
+        # Inactivo si no hay ninguna unidad en ninguna etapa del pipeline
+        has_trucks = any(curr_frente.get(u, 0) > 0
+                         for u in ['ucampo', 'uvienen', 'upatio', 'uplantel', 'umoli'])
+        inactive = not has_trucks
 
         frentes_data[codigo] = {
             "codigo": codigo,
