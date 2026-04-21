@@ -417,50 +417,103 @@
         }
 
         /* ══════════════════════════════════════════
-           RESPONSIVE
+           RESPONSIVE — TABLET ≤768px
         ══════════════════════════════════════════ */
-        @media (max-width: 640px) {
-            .pl-row { flex-direction: column; gap: 0; }
-            .pl-node {
-                flex-direction: row;
-                justify-content: space-between;
-                padding: 10px 14px;
-                border-radius: 8px;
-                gap: 10px;
-                text-align: left;
-            }
-            .pl-node > * { flex-shrink: 0; }
-            .pl-label { font-size: 0.7rem; margin-top: 2px; }
-            .pl-tons  { font-size: 1.1rem; }
-            .pl-conn {
-                flex-direction: row;
-                min-width: auto;
-                justify-content: center;
-                padding: 3px 14px;
-                gap: 10px;
-                align-self: stretch;
-            }
-            .pl-arrow { transform: rotate(90deg); }
-        }
-
         @media (max-width: 768px) {
-            .container { padding: 0 12px 20px; }
-            h1 { font-size: 1.15rem; }
-            .frentes-list { grid-template-columns: 1fr; }
-            .detail-stats { grid-template-columns: repeat(2, 1fr); }
-            .stage-flows-grid { grid-template-columns: repeat(2, 1fr); }
-            .stat-value  { font-size: 1.3rem; }
+            .container  { padding: 0 10px 16px; }
+            header      { padding: 10px 12px; margin-bottom: 14px; }
+            h1          { font-size: 1.08rem; }
+            .header-info { gap: 14px; font-size: 0.83rem; }
+
+            .section         { padding: 14px; margin-bottom: 14px; border-radius: 10px; }
+            .section h2      { font-size: 0.95rem; margin-bottom: 12px; }
+            .history-section { padding: 14px; margin-bottom: 14px; border-radius: 10px; }
+
+            /* Pipeline: horizontal scroll — compact, swipeable */
+            .pl-row {
+                flex-direction: row;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                gap: 4px;
+                padding-bottom: 6px;
+            }
+            .pl-row::-webkit-scrollbar { height: 3px; }
+            .pl-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+            .pl-node  { min-width: 90px; flex: 0 0 90px; padding: 10px 5px 8px; }
+            .pl-conn  { min-width: 32px; flex-shrink: 0; }
+            .pl-tons  { font-size: 1.05rem; }
+            .pl-arrow { transform: none; } /* keep → pointing right */
+
+            .frentes-list   { grid-template-columns: 1fr; gap: 10px; }
             .frente-card.expanded { grid-column: 1; }
-            .stage-item-value { font-size: 0.9rem; }
+
+            .stage-item-value  { font-size: 0.9rem; }
+            .detail-stats      { grid-template-columns: repeat(2, 1fr); }
+            .stage-flows-grid  { grid-template-columns: repeat(2, 1fr); }
+            .stat-value        { font-size: 1.25rem; }
         }
 
+        /* ══════════════════════════════════════════
+           RESPONSIVE — MOBILE ≤480px
+        ══════════════════════════════════════════ */
         @media (max-width: 480px) {
-            .detail-stats { grid-template-columns: 1fr; }
-            .frente-name  { font-size: 0.92rem; }
-            .badge { padding: 3px 7px; font-size: 0.7rem; }
-            .stage-flows-grid { grid-template-columns: 1fr; }
-            .stage-grid { grid-template-columns: repeat(3, 1fr); }
-            .stage-item-value { font-size: 0.85rem; }
+            .container   { padding: 0 8px 12px; }
+            header       { padding: 8px 10px; }
+            .header-inner { gap: 4px; }
+            h1           { font-size: 0.92rem; letter-spacing: -0.3px; }
+            .header-info { gap: 10px; font-size: 0.78rem; }
+
+            .section         { padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+            .section h2      { font-size: 0.86rem; margin-bottom: 10px; }
+            .history-section { padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+            .history-header  { flex-direction: column; align-items: stretch; gap: 8px; }
+            .history-header h2 { font-size: 0.86rem; }
+            .history-controls { width: 100%; }
+            .history-select  { width: 100%; font-size: 0.82rem; }
+            svg.history-chart { min-width: 300px; height: 170px; }
+
+            /* Pipeline nodes slightly narrower */
+            .pl-node { min-width: 78px; flex: 0 0 78px; padding: 8px 4px 6px; }
+            .pl-conn { min-width: 26px; }
+            .pl-tons { font-size: 0.95rem; }
+            .pl-icon { font-size: 1.15rem; }
+            .pl-label { font-size: 0.58rem; }
+            .pl-units { font-size: 0.68rem; }
+            .pl-flow  { font-size: 0.55rem; padding: 1px 3px; }
+
+            /* Cards */
+            .frente-header { padding: 10px 11px; }
+            .frente-code   { font-size: 0.68rem; }
+            .frente-name   { font-size: 0.88rem; }
+            .frente-body   { padding: 10px 11px 4px; }
+            .badge         { padding: 3px 7px; font-size: 0.67rem; }
+            .badge-inactive { font-size: 0.62rem; padding: 2px 6px; }
+
+            /* Stage grid: 3 cols → 5 items = 3+2 rows */
+            .stage-grid        { grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 8px; }
+            .stage-item        { padding: 7px 3px; border-radius: 6px; }
+            .stage-item-label  { font-size: 0.55rem; }
+            .stage-item-value  { font-size: 0.82rem; }
+            .stage-item-unit   { font-size: 0.53rem; }
+
+            .trend-row       { padding: 5px 0 8px; }
+            .trend-row-label { font-size: 0.62rem; }
+            .trend3h-badge   { font-size: 0.6rem; padding: 2px 5px; }
+            .expand-icon     { font-size: 0.9rem; }
+
+            /* Detail panel */
+            .frente-detail   { padding: 10px; }
+            .detail-section  { margin-bottom: 14px; }
+            .detail-section h3 { font-size: 0.7rem; margin-bottom: 8px; }
+            .detail-stats    { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+            .stage-flows-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+            .stage-flow-box  { padding: 9px 5px; }
+            .stat-box        { padding: 9px 6px; }
+            .stat-label      { font-size: 0.6rem; margin-bottom: 3px; }
+            .stat-value      { font-size: 1.1rem; }
+            .stat-subtext    { font-size: 0.62rem; }
+
+            footer { font-size: 0.72rem; padding-top: 10px; }
         }
     </style>
 </head>
