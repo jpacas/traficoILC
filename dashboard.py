@@ -338,7 +338,6 @@ def compute_api_data(history):
                     None
                 )
             } for stage in _calculate_stage_flows(curr_frente)},
-            "status": status,
             "trend": trend,
             "trend_3h": trend_3h,
             "inactive": inactive
@@ -355,7 +354,9 @@ def compute_api_data(history):
 
     status_counts = {"ok": 0, "low": 0, "stop": 0, "unknown": 0}
     for f in frentes_data.values():
-        status_counts[f['status']] += 1
+        status_counts[classify_status(
+            f['flow']['current_tph'], f['flow']['avg_tph'], f['flow']['history_points']
+        )] += 1
 
     # Calcular flujos globales por etapa: suma de flujos de cada frente
     # Como check: sum(frente_flows) == total_flow
