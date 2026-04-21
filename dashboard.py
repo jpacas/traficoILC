@@ -136,6 +136,28 @@ def classify_trend(flow, avg_flow):
         return "stable"
 
 
+def classify_trend_3h(flow_series, current_ts):
+    """Compara flujo promedio de la última 1h vs 2-3h atrás."""
+    if not current_ts or not flow_series:
+        return "unknown"
+    cutoff_1h = current_ts - timedelta(hours=1)
+    cutoff_2h = current_ts - timedelta(hours=2)
+    cutoff_3h = current_ts - timedelta(hours=3)
+    recent = [f for ts, f in flow_series if ts >= cutoff_1h]
+    older  = [f for ts, f in flow_series if cutoff_3h <= ts < cutoff_2h]
+    if not recent or not older:
+        return "unknown"
+    avg_older = mean(older)
+    if avg_older == 0:
+        return "unknown"
+    ratio = mean(recent) / avg_older
+    if ratio > 1 + TREND_BAND:
+        return "rising"
+    if ratio < 1 - TREND_BAND:
+        return "falling"
+    return "stable"
+
+
 def _calculate_stage_flows(curr_frente):
     """Devuelve los snapshots actuales de cada stage (para display dentro de cajas).
     Los flujos se calculan aparte con histórico."""
@@ -198,13 +220,16 @@ def compute_api_data(history):
 
     # Calcular flujos históricos: para cada lectura, buscar par ~1 hora antes
     historical_flows = {}
+    historical_flow_ts = {}   # timestamps paralelos para trend_3h
     historical_stage_flows = {}
     for codigo in current['frentes'].keys():
         historical_flows[codigo] = []
+        historical_flow_ts[codigo] = []
         historical_stage_flows[codigo] = {
             'plantel': [],   # patio→plantel (balance de masa)
             'patio':   [],   # vienen→patio  (balance de masa)
             'vienen':  [],   # campo→vienen  (balance de masa)
+            'campo':   [],   # flujo desde campo
         }
 
     for i in range(1, len(history)):
@@ -226,19 +251,23 @@ def compute_api_data(history):
                 delta_plantel = curr_data['tplantel'] - prev_data['tplantel']
                 delta_patio   = curr_data['tpatio']   - prev_data['tpatio']
                 delta_vienen  = curr_data['tvienen']  - prev_data['tvienen']
+                delta_campo   = curr_data['tcampo']   - prev_data['tcampo']
 
                 if delta_moli >= 0:
                     flow_moli = delta_moli / elapsed_h_pair
                     historical_flows[codigo].append(flow_moli)
+                    historical_flow_ts[codigo].append(curr_ts)
 
                     # Balance de masa hacia atrás: flow_in = flow_out + Δinventario
                     flow_plantel = max(0.0, flow_moli    + delta_plantel / elapsed_h_pair)
                     flow_patio   = max(0.0, flow_plantel + delta_patio   / elapsed_h_pair)
                     flow_vienen  = max(0.0, flow_patio   + delta_vienen  / elapsed_h_pair)
+                    flow_campo   = max(0.0, flow_vienen  + delta_campo   / elapsed_h_pair)
 
                     historical_stage_flows[codigo]['plantel'].append(flow_plantel)
                     historical_stage_flows[codigo]['patio'].append(flow_patio)
                     historical_stage_flows[codigo]['vienen'].append(flow_vienen)
+                    historical_stage_flows[codigo]['campo'].append(flow_campo)
 
     # Promediar: al menos 5 flujos si disponibles, sino usar todos disponibles
     avg_flows = {}
@@ -249,7 +278,7 @@ def compute_api_data(history):
         avg_flows[codigo] = mean(flows[-5:]) if len(flows) >= 5 else (mean(flows) if flows else None)
 
         avg_stage_flows[codigo] = {}
-        for stage in ['plantel', 'patio', 'vienen']:
+        for stage in ['plantel', 'patio', 'vienen', 'campo']:
             flows_stage = historical_stage_flows[codigo][stage]
             avg_stage_flows[codigo][stage] = mean(flows_stage[-5:]) if len(flows_stage) >= 5 else (mean(flows_stage) if flows_stage else None)
 
@@ -263,8 +292,13 @@ def compute_api_data(history):
                 flow_tph = delta / elapsed_h
 
         avg_tph = avg_flows.get(codigo)
-        status = classify_status(flow_tph, avg_tph, len(historical_flows.get(codigo, [])))
+        history_pts = len(historical_flows.get(codigo, []))
+        status = classify_status(flow_tph, avg_tph, history_pts)
         trend = classify_trend(flow_tph, avg_tph)
+
+        flow_series = list(zip(historical_flow_ts[codigo], historical_flows[codigo]))
+        trend_3h = classify_trend_3h(flow_series, timestamps[-1])
+        inactive = (status == "stop") and history_pts >= 3
 
         frentes_data[codigo] = {
             "codigo": codigo,
@@ -287,18 +321,20 @@ def compute_api_data(history):
                 "current_tph": round(flow_tph, 2) if flow_tph is not None else None,
                 "avg_tph": round(avg_tph, 2) if avg_tph is not None else None,
                 "delta_ton": round(curr_frente['tmoli'] - previous['frentes'].get(codigo, {}).get('tmoli', curr_frente['tmoli']), 2) if previous else 0,
-                "history_points": len(historical_flows.get(codigo, []))
+                "history_points": history_pts
             },
             "stages": {stage: {
                 **_calculate_stage_flows(curr_frente)[stage],
                 'flow_tph': (
                     round(avg_flows.get(codigo), 2) if stage == 'molino' and avg_flows.get(codigo) is not None else
-                    round(avg_stage_flows[codigo].get(stage), 2) if stage in ['plantel', 'patio', 'vienen'] and avg_stage_flows[codigo].get(stage) is not None else
+                    round(avg_stage_flows[codigo].get(stage), 2) if stage in ['plantel', 'patio', 'vienen', 'campo'] and avg_stage_flows[codigo].get(stage) is not None else
                     None
                 )
             } for stage in _calculate_stage_flows(curr_frente)},
             "status": status,
-            "trend": trend
+            "trend": trend,
+            "trend_3h": trend_3h,
+            "inactive": inactive
         }
 
     total_current_flow = sum(
@@ -364,6 +400,50 @@ def compute_api_data(history):
     }
 
 
+def compute_history_data(history):
+    """Devuelve time-series de flujos para las últimas 24h (máx 288 puntos)."""
+    if not history:
+        return []
+
+    timestamps = [parse_fetch_time(r['fetch_time']) for r in history]
+    results = []
+
+    for i in range(1, len(history)):
+        j = _find_reading_before(timestamps, i)
+        if j is None:
+            continue
+        curr_ts = timestamps[i]
+        prev_ts = timestamps[j]
+        if crosses_zafra_boundary(prev_ts, curr_ts):
+            continue
+        elapsed_h = (curr_ts - prev_ts).total_seconds() / 3600
+        if elapsed_h <= 0:
+            continue
+
+        curr = history[i]
+        prev = history[j]
+        frente_flows = {}
+        total_flow = 0.0
+
+        for codigo, curr_data in curr['frentes'].items():
+            if codigo not in prev['frentes']:
+                continue
+            delta = curr_data['tmoli'] - prev['frentes'][codigo]['tmoli']
+            if delta >= 0:
+                flow = round(delta / elapsed_h, 2)
+                frente_flows[codigo] = flow
+                total_flow += flow
+
+        results.append({
+            'time': curr_ts.isoformat(),
+            'frentes': frente_flows,
+            'total_flow': round(total_flow, 2)
+        })
+
+    # Devolver últimos 288 puntos (24h a 5min = 288 lecturas)
+    return results[-288:]
+
+
 class DashboardHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
@@ -373,6 +453,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._serve_html()
         elif path == '/api/data':
             self._serve_api()
+        elif path == '/api/history':
+            self._serve_history()
         else:
             self.send_error(404)
 
@@ -389,6 +471,16 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     def _serve_api(self):
         data = compute_api_data(load_history())
+        body = json.dumps(data, ensure_ascii=False).encode('utf-8')
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Content-Length', len(body))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _serve_history(self):
+        data = compute_history_data(load_history())
         body = json.dumps(data, ensure_ascii=False).encode('utf-8')
         self.send_response(200)
         self.send_header('Content-Type', 'application/json; charset=utf-8')

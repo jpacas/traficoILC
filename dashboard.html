@@ -6,20 +6,23 @@
     <title>Monitor de Flujo — Ingenio La Cabaña</title>
     <style>
         :root {
-            --ok: #22c55e;
-            --low: #f59e0b;
-            --stop: #ef4444;
-            --bg: #0f172a;
-            --card: #1e293b;
-            --border: #334155;
-            --text: #e2e8f0;
-            --dim: #94a3b8;
-            --campo: #3b82f6;
-            --vienen: #f59e0b;
-            --patio: #8b5cf6;
-            --plantel: #ec4899;
-            --molino: #22c55e;
-            --van: #6b7280;
+            --ok:          #16a34a;
+            --low:         #d97706;
+            --stop:        #dc2626;
+            --bg:          #eef4ee;
+            --card:        #ffffff;
+            --border:      #c3d9c3;
+            --text:        #1a2e1a;
+            --dim:         #4a6b4a;
+            --header-bg:   #1a5c38;
+            --header-text: #ffffff;
+            --campo:       #2563eb;
+            --vienen:      #d97706;
+            --patio:       #7c3aed;
+            --plantel:     #db2777;
+            --molino:      #16a34a;
+            --van:         #6b7280;
+            --accent:      #f5a623;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -30,24 +33,29 @@
             color: var(--text);
             line-height: 1.5;
         }
-        .container { max-width: 1600px; margin: 0 auto; padding: 16px 20px; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 0 20px 24px; }
 
         /* ── Header ── */
         header {
+            background: var(--header-bg);
+            color: var(--header-text);
+            padding: 14px 20px;
+            margin-bottom: 20px;
+        }
+        .header-inner {
+            max-width: 1600px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 14px;
-            border-bottom: 2px solid var(--border);
             gap: 12px;
             flex-wrap: wrap;
         }
-        h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
+        h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; color: var(--header-text); }
         .header-info { display: flex; gap: 20px; font-size: 0.9rem; flex-wrap: wrap; }
-        .info-item { display: flex; align-items: center; gap: 8px; }
-        .info-label { font-weight: 600; }
-        .info-value { color: var(--dim); }
+        .info-item { display: flex; align-items: center; gap: 6px; }
+        .info-label { font-weight: 600; color: rgba(255,255,255,0.75); }
+        .info-value { color: #ffffff; }
 
         /* ── Section cards ── */
         .section {
@@ -56,11 +64,13 @@
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
+            box-shadow: 0 1px 4px rgba(26,92,56,0.07);
         }
         .section h2 {
             font-size: 1.05rem;
             font-weight: 600;
             margin-bottom: 16px;
+            color: var(--header-bg);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -68,7 +78,6 @@
 
         /* ══════════════════════════════════════════
            HTML PIPELINE — responsive
-           Desktop: row   |   Mobile: column
         ══════════════════════════════════════════ */
         .pl-row {
             display: flex;
@@ -76,11 +85,10 @@
             align-items: stretch;
             gap: 4px;
         }
-
         .pl-node {
             flex: 1;
             min-width: 0;
-            border: 2px solid var(--c, var(--dim));
+            border: 2px solid var(--c, var(--border));
             border-radius: 10px;
             padding: 14px 6px 10px;
             text-align: center;
@@ -88,7 +96,7 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            background: rgba(0,0,0,0.15);
+            background: rgba(255,255,255,0.7);
         }
         .pl-icon  { font-size: 1.4rem; line-height: 1; }
         .pl-label {
@@ -107,7 +115,6 @@
         }
         .pl-unit  { font-size: 0.7rem; color: var(--dim); margin-left: 1px; }
         .pl-units { font-size: 0.75rem; color: var(--dim); }
-
         .pl-conn {
             display: flex;
             flex-direction: column;
@@ -124,7 +131,7 @@
             font-family: monospace;
             color: var(--ok);
             white-space: nowrap;
-            background: rgba(34,197,94,0.1);
+            background: rgba(22,163,74,0.1);
             border-radius: 4px;
             padding: 2px 4px;
         }
@@ -142,89 +149,147 @@
         }
 
         .frente-card {
-            background: rgba(30, 41, 59, 0.5);
+            background: var(--card);
             border: 1px solid var(--border);
             border-radius: 8px;
             overflow: hidden;
             cursor: pointer;
             transition: border-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 1px 3px rgba(26,92,56,0.06);
         }
         .frente-card:hover {
-            border-color: var(--text);
-            box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+            border-color: var(--header-bg);
+            box-shadow: 0 4px 12px rgba(26,92,56,0.15);
         }
         .frente-card.expanded { grid-column: 1 / -1; }
 
+        .frente-card.inactive {
+            border-color: var(--stop);
+            background: rgba(220,38,38,0.04);
+        }
+        .frente-card.inactive:hover {
+            border-color: #b91c1c;
+            box-shadow: 0 4px 12px rgba(220,38,38,0.15);
+        }
+
         .frente-header {
-            background: rgba(15, 23, 42, 0.8);
-            padding: 14px 16px;
+            background: rgba(238,244,238,0.8);
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 8px;
         }
+        .frente-card.inactive .frente-header {
+            background: rgba(220,38,38,0.06);
+            border-bottom-color: rgba(220,38,38,0.2);
+        }
         .frente-title { flex: 1; min-width: 0; }
         .frente-code  { font-size: 0.75rem; color: var(--dim); font-weight: 600; margin-bottom: 2px; }
-        .frente-name  { font-size: 1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .frente-name  { font-size: 1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
 
-        .frente-badges { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+        .frente-badges { display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
 
         .badge {
             display: inline-block;
-            padding: 5px 10px;
+            padding: 4px 9px;
             border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.72rem;
+            font-weight: 700;
         }
-        .badge.ok   { background: rgba(34,197,94,0.2);  color: #86efac; border: 1px solid var(--ok);   }
-        .badge.low  { background: rgba(245,158,11,0.2); color: #fcd34d; border: 1px solid var(--low);  }
-        .badge.stop { background: rgba(239,68,68,0.2);  color: #fca5a5; border: 1px solid var(--stop); }
+        .badge.ok     { background: rgba(22,163,74,0.12);  color: #15803d; border: 1px solid rgba(22,163,74,0.4);   }
+        .badge.low    { background: rgba(217,119,6,0.12);  color: #b45309; border: 1px solid rgba(217,119,6,0.4);   }
+        .badge.stop   { background: rgba(220,38,38,0.12);  color: #b91c1c; border: 1px solid rgba(220,38,38,0.4);   }
+        .badge.unknown{ background: rgba(107,114,128,0.1); color: var(--dim); border: 1px solid rgba(107,114,128,0.3); }
+        .badge-inactive {
+            background: var(--stop);
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 3px 7px;
+            border-radius: 4px;
+            letter-spacing: 0.3px;
+        }
 
         .trend-badge {
-            width: 32px; height: 32px;
-            border-radius: 6px;
+            width: 28px; height: 28px;
+            border-radius: 5px;
             display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 1.2rem;
+            font-weight: 700; font-size: 1rem;
         }
-        .trend-badge.up     { background: rgba(34,197,94,0.15);  color: var(--ok);   }
-        .trend-badge.down   { background: rgba(239,68,68,0.15);  color: var(--stop); }
-        .trend-badge.stable { background: rgba(245,158,11,0.15); color: var(--low);  }
+        .trend-badge.up     { background: rgba(22,163,74,0.12);  color: var(--ok);   }
+        .trend-badge.down   { background: rgba(220,38,38,0.12);  color: var(--stop); }
+        .trend-badge.stable { background: rgba(217,119,6,0.12);  color: var(--low);  }
 
-        .frente-body { padding: 14px 16px; }
+        /* trend_3h badge */
+        .trend3h-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        .trend3h-badge.rising  { background: rgba(22,163,74,0.12);  color: #15803d; border: 1px solid rgba(22,163,74,0.3); }
+        .trend3h-badge.falling { background: rgba(220,38,38,0.12);  color: #b91c1c; border: 1px solid rgba(220,38,38,0.3); }
+        .trend3h-badge.stable  { background: rgba(217,119,6,0.12);  color: #b45309; border: 1px solid rgba(217,119,6,0.3); }
+
+        .frente-body { padding: 12px 16px 14px; }
 
         .frente-flow {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 12px;
-            background: rgba(15,23,42,0.5);
+            background: rgba(238,244,238,0.6);
             border-radius: 6px;
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
         }
         .flow-value { display: flex; flex-direction: column; gap: 1px; }
-        .flow-label { font-size: 0.7rem; color: var(--dim); text-transform: uppercase; font-weight: 600; }
-        .flow-number { font-size: 1.9rem; font-weight: 700; font-family: monospace; color: var(--molino); line-height: 1.1; }
-        .flow-unit   { font-size: 0.8rem; color: var(--dim); }
+        .flow-label { font-size: 0.68rem; color: var(--dim); text-transform: uppercase; font-weight: 600; }
+        .flow-number { font-size: 1.8rem; font-weight: 700; font-family: monospace; color: var(--molino); line-height: 1.1; }
+        .flow-unit   { font-size: 0.78rem; color: var(--dim); }
 
-        .flow-bar { flex: 1; margin: 0 12px; height: 7px; background: rgba(107,114,128,0.2); border-radius: 4px; overflow: hidden; }
+        .flow-bar { flex: 1; margin: 0 10px; height: 7px; background: rgba(195,217,195,0.5); border-radius: 4px; overflow: hidden; }
         .flow-bar-fill { height: 100%; background: linear-gradient(90deg, var(--molino), #15803d); border-radius: 4px; transition: width 0.3s; }
 
-        .expand-icon { font-size: 1.2rem; color: var(--dim); margin-left: 8px; transition: transform 0.3s; }
+        .expand-icon { font-size: 1.1rem; color: var(--dim); margin-left: 6px; transition: transform 0.3s; }
         .frente-card.expanded .expand-icon { transform: rotate(180deg); }
+
+        /* ── Stage chips (collapsed view) ── */
+        .stage-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .chip {
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 12px;
+            white-space: nowrap;
+            border: 1px solid;
+        }
+        .chip-campo   { color: var(--campo);   background: rgba(37,99,235,0.08);  border-color: rgba(37,99,235,0.25); }
+        .chip-vienen  { color: var(--vienen);  background: rgba(217,119,6,0.08);  border-color: rgba(217,119,6,0.25); }
+        .chip-patio   { color: var(--patio);   background: rgba(124,58,237,0.08); border-color: rgba(124,58,237,0.25); }
+        .chip-plantel { color: var(--plantel); background: rgba(219,39,119,0.08); border-color: rgba(219,39,119,0.25); }
+        .chip-molino  { color: var(--molino);  background: rgba(22,163,74,0.08);  border-color: rgba(22,163,74,0.25); }
 
         /* ── Detail panel ── */
         .frente-detail {
             display: none;
             padding: 18px;
             border-top: 1px solid var(--border);
-            background: rgba(15,23,42,0.3);
+            background: rgba(238,244,238,0.3);
         }
         .frente-card.expanded .frente-detail { display: block; }
 
         .detail-section { margin-bottom: 22px; }
         .detail-section h3 {
-            font-size: 0.82rem;
-            font-weight: 600;
+            font-size: 0.8rem;
+            font-weight: 700;
             color: var(--dim);
             text-transform: uppercase;
             margin-bottom: 10px;
@@ -237,7 +302,7 @@
             gap: 10px;
         }
         .stat-box {
-            background: rgba(30,41,59,0.8);
+            background: var(--card);
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 12px;
@@ -247,79 +312,96 @@
         .stat-value   { font-size: 1.5rem; font-weight: 700; font-family: monospace; color: var(--molino); }
         .stat-subtext { font-size: 0.72rem; color: var(--dim); margin-top: 3px; }
 
-        /* Stage flows — 4 boxes */
         .stage-flows-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 8px;
         }
         .stage-flow-box {
-            background: rgba(30,41,59,0.8);
+            background: var(--card);
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 11px 8px;
             text-align: center;
         }
 
-        /* ── Chart ── */
-        .chart-container {
-            background: rgba(30,41,59,0.6);
+        /* ── 24h History Chart ── */
+        .history-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 4px rgba(26,92,56,0.07);
+        }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .history-header h2 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--header-bg);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .history-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .history-select {
+            padding: 6px 12px;
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 14px;
+            background: var(--card);
+            color: var(--text);
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .svg-chart-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+        svg.history-chart {
+            display: block;
+            width: 100%;
+            min-width: 400px;
             height: 220px;
-            display: flex;
-            flex-direction: column;
         }
-        .chart {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            height: 160px;
-            gap: 4px;
-            flex: 1;
-        }
-        .chart-bar {
-            flex: 1;
-            background: linear-gradient(180deg, var(--molino), #15803d);
-            border-radius: 2px;
-            min-height: 2px;
-            position: relative;
-            opacity: 0.8;
-            transition: opacity 0.2s;
-        }
-        .chart-bar:hover { opacity: 1; }
-        .chart-bar-value {
-            position: absolute;
-            bottom: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.6rem;
+        .chart-no-data {
+            text-align: center;
             color: var(--dim);
-            white-space: nowrap;
-            font-family: monospace;
-            font-weight: 600;
+            padding: 40px;
+            font-size: 0.9rem;
         }
-        .chart-label { text-align: center; font-size: 0.72rem; color: var(--dim); margin-top: 26px; font-weight: 600; }
 
         footer {
             text-align: center;
-            margin-top: 28px;
+            margin-top: 8px;
             padding-top: 14px;
             border-top: 1px solid var(--border);
             font-size: 0.8rem;
             color: var(--dim);
         }
 
-        .error-box { background: rgba(239,68,68,0.1); border: 2px solid var(--stop); border-radius: 8px; padding: 16px; color: #fca5a5; text-align: center; margin: 20px 0; font-weight: 500; }
+        .error-box {
+            background: rgba(220,38,38,0.08);
+            border: 2px solid var(--stop);
+            border-radius: 8px;
+            padding: 16px;
+            color: #b91c1c;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: 500;
+        }
 
         /* ══════════════════════════════════════════
-           RESPONSIVE — Mobile portrait
+           RESPONSIVE
         ══════════════════════════════════════════ */
         @media (max-width: 640px) {
-            /* Pipeline: stacks vertically */
             .pl-row { flex-direction: column; gap: 0; }
-
             .pl-node {
                 flex-direction: row;
                 justify-content: space-between;
@@ -331,7 +413,6 @@
             .pl-node > * { flex-shrink: 0; }
             .pl-label { font-size: 0.7rem; margin-top: 2px; }
             .pl-tons  { font-size: 1.1rem; }
-
             .pl-conn {
                 flex-direction: row;
                 min-width: auto;
@@ -340,13 +421,12 @@
                 gap: 10px;
                 align-self: stretch;
             }
-            /* Rotate arrow → to point down */
             .pl-arrow { transform: rotate(90deg); }
         }
 
         @media (max-width: 768px) {
-            .container { padding: 12px; }
-            h1 { font-size: 1.2rem; }
+            .container { padding: 0 12px 20px; }
+            h1 { font-size: 1.15rem; }
             .frentes-list { grid-template-columns: 1fr; }
             .detail-stats { grid-template-columns: repeat(2, 1fr); }
             .stage-flows-grid { grid-template-columns: repeat(2, 1fr); }
@@ -358,14 +438,15 @@
         @media (max-width: 480px) {
             .detail-stats { grid-template-columns: 1fr; }
             .frente-name  { font-size: 0.92rem; }
-            .badge { padding: 4px 8px; font-size: 0.72rem; }
+            .badge { padding: 3px 7px; font-size: 0.7rem; }
+            .stage-flows-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🌾 Monitor de Flujo — Ingenio La Cabaña</h1>
+    <header>
+        <div class="header-inner">
+            <h1>Monitor de Flujo — Ingenio La Cabaña</h1>
             <div class="header-info">
                 <div class="info-item">
                     <span class="info-label">Actualizado:</span>
@@ -376,30 +457,46 @@
                     <span class="info-value" id="reading-count">—</span>
                 </div>
             </div>
-        </header>
+        </div>
+    </header>
 
+    <div class="container">
         <div class="section">
-            <h2>📊 Pipeline Global — Todos los Frentes</h2>
+            <h2>Pipeline Global — Todos los Frentes</h2>
             <div id="global-pipeline"></div>
         </div>
 
         <div class="section">
-            <h2>🚜 Flujo por Frente</h2>
+            <h2>Flujo por Frente</h2>
             <div class="frentes-list" id="frentes-list"></div>
         </div>
 
+        <div class="history-section">
+            <div class="history-header">
+                <h2>Tendencia 24 Horas — Flujo al Molino</h2>
+                <div class="history-controls">
+                    <select class="history-select" id="history-frente-select">
+                        <option value="__global__">Global (Todos)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="history-chart-area"><div class="chart-no-data">Cargando datos históricos...</div></div>
+        </div>
+
         <footer>
-            <p>Monitor de Flujo de Caña — Ingenio La Cabaña | Actualización cada hora</p>
+            <p>Monitor de Flujo de Caña — Ingenio La Cabaña | Actualización cada 5 minutos</p>
         </footer>
     </div>
 
     <script>
-        const API_URL = '/api/data';
-        const REFRESH_INTERVAL = 3600000; // 1 hora
+        const API_URL         = '/api/data';
+        const HISTORY_API_URL = '/api/history';
+        const REFRESH_INTERVAL = 300000; // 5 minutos
 
-        let flowHistory = {};
+        let historyData = [];
+        let frentesIndex = {};  // codigo → nombre
 
-        // ── Pipeline HTML renderer (responsive: row on desktop, column on mobile) ──
+        // ── Pipeline HTML renderer ──
         function drawPipeline(container, snapshot, stageFlows) {
             const stages = [
                 { tKey: 'tcampo',   uKey: 'ucampo',   label: 'Campo',   icon: '🌾', color: 'var(--campo)',   nextFlow: 'vienen'  },
@@ -409,7 +506,7 @@
                 { tKey: 'tmoli',    uKey: 'umoli',    label: 'Molino',  icon: '⚙️', color: 'var(--molino)',  nextFlow: null      },
             ];
 
-            const parts = stages.map((s, idx) => {
+            const parts = stages.map(s => {
                 const tons  = (snapshot[s.tKey] || 0).toFixed(0);
                 const units = snapshot[s.uKey] || 0;
                 const node  = `<div class="pl-node" style="--c:${s.color}">
@@ -434,26 +531,50 @@
             container.innerHTML = `<div class="pl-row">${parts}</div>`;
         }
 
+        // ── Stage chips for collapsed view ──
+        function renderStageChips(stages) {
+            const stageList = [
+                { key: 'campo',   label: 'Campo',   cls: 'chip-campo'   },
+                { key: 'vienen',  label: 'Vienen',  cls: 'chip-vienen'  },
+                { key: 'patio',   label: 'Patio',   cls: 'chip-patio'   },
+                { key: 'plantel', label: 'Plantel', cls: 'chip-plantel' },
+                { key: 'molino',  label: 'Molino',  cls: 'chip-molino'  },
+            ];
+            return stageList.map(s => {
+                const tph = stages?.[s.key]?.flow_tph;
+                const val = tph != null ? `${tph.toFixed(0)} t/h` : '—';
+                return `<span class="chip ${s.cls}">${s.label}: ${val}</span>`;
+            }).join('');
+        }
+
+        // ── Trend_3h badge ──
+        function renderTrend3h(trend3h) {
+            if (!trend3h || trend3h === 'unknown') return '';
+            const labels = { rising: '↑ Subiendo', falling: '↓ Bajando', stable: '→ Estable' };
+            return `<span class="trend3h-badge ${trend3h}">${labels[trend3h] || trend3h}</span>`;
+        }
+
         async function fetchData() {
             try {
                 const response = await fetch(API_URL);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
-
-                for (const codigo in data.frentes) {
-                    if (!flowHistory[codigo]) flowHistory[codigo] = [];
-                    flowHistory[codigo].push({
-                        time: new Date(data.meta.server_time),
-                        flow: data.frentes[codigo].flow.current_tph || 0
-                    });
-                    if (flowHistory[codigo].length > 20) flowHistory[codigo].shift();
-                }
-
                 render(data);
             } catch (error) {
                 console.error('Error:', error);
-                document.querySelector('.section').innerHTML =
-                    '<div class="error-box">❌ Error conectando con el servidor</div>';
+                document.getElementById('frentes-list').innerHTML =
+                    '<div class="error-box">Error conectando con el servidor</div>';
+            }
+        }
+
+        async function fetchHistory() {
+            try {
+                const response = await fetch(HISTORY_API_URL);
+                if (!response.ok) return;
+                historyData = await response.json();
+                renderHistoryChart();
+            } catch (e) {
+                console.error('Error history:', e);
             }
         }
 
@@ -461,50 +582,64 @@
             renderHeader(data.meta);
             drawPipeline(document.getElementById('global-pipeline'), data.total.snapshot, data.global_stages);
             renderFrentesList(data);
+            updateHistorySelect(data.frentes);
         }
 
         function renderHeader(meta) {
             if (!meta.last_fetch_time) return;
-            const formatter = new Intl.DateTimeFormat('es-CO', {
+            const formatter = new Intl.DateTimeFormat('es-SV', {
                 hour: '2-digit', minute: '2-digit', second: '2-digit',
-                timeZone: 'America/Bogota'
+                timeZone: 'America/El_Salvador'
             });
-            document.getElementById('last-update').textContent  = formatter.format(new Date(meta.last_fetch_time));
+            document.getElementById('last-update').textContent   = formatter.format(new Date(meta.last_fetch_time));
             document.getElementById('reading-count').textContent = meta.readings_count;
+        }
+
+        function updateHistorySelect(frentes) {
+            const select = document.getElementById('history-frente-select');
+            const current = select.value;
+            // rebuild options preserving selection
+            const options = ['<option value="__global__">Global (Todos)</option>'];
+            Object.entries(frentes).sort((a, b) => (parseInt(a[0]) || 9999) - (parseInt(b[0]) || 9999)).forEach(([c, f]) => {
+                frentesIndex[c] = f.nombre;
+                const sel = current === c ? ' selected' : '';
+                options.push(`<option value="${c}"${sel}>[${c}] ${f.nombre}</option>`);
+            });
+            select.innerHTML = options.join('');
         }
 
         function renderFrentesList(data) {
             const list = document.getElementById('frentes-list');
             list.innerHTML = '';
 
-            const sortedCodigos = Object.keys(data.frentes).sort((a, b) => {
-                return (parseInt(a) || 9999) - (parseInt(b) || 9999);
-            });
+            const entries = Object.entries(data.frentes)
+                .sort((a, b) => (parseInt(a[0]) || 9999) - (parseInt(b[0]) || 9999));
+
+            // Active first, inactive last
+            const active   = entries.filter(([, f]) => !f.inactive);
+            const inactive = entries.filter(([, f]) => f.inactive);
+            const sorted   = [...active, ...inactive];
 
             const maxFlow = Math.max(...Object.values(data.frentes).map(f => f.flow.current_tph || 0), 100);
 
-            sortedCodigos.forEach(codigo => {
-                const f        = data.frentes[codigo];
-                const flow     = f.flow.current_tph || 0;
+            sorted.forEach(([codigo, f]) => {
+                const flow      = f.flow.current_tph || 0;
                 const flowWidth = Math.max(2, (flow / maxFlow) * 100);
-                const history  = flowHistory[codigo] || [];
-                const avgFlow  = history.length > 0
-                    ? history.reduce((a, b) => a + b.flow, 0) / history.length
-                    : (f.flow.avg_tph || 0);
-                const diff        = flow - avgFlow;
-                const diffPercent = avgFlow > 0 ? ((diff / avgFlow) * 100).toFixed(1) : 0;
+                const avgFlow   = f.flow.avg_tph || 0;
+                const diff      = flow - avgFlow;
                 const trendClass  = f.trend === 'up' ? 'up' : f.trend === 'down' ? 'down' : 'stable';
                 const trendSymbol = f.trend === 'up' ? '↑' : f.trend === 'down' ? '↓' : '→';
 
-                // Stage flow boxes
+                // Stage flow boxes (detail)
                 const stageBoxes = [
-                    { key: 'vienen',  label: 'Campo → Vienen',   color: 'var(--vienen)'  },
-                    { key: 'patio',   label: 'Vienen → Patio',   color: 'var(--patio)'   },
-                    { key: 'plantel', label: 'Patio → Plantel',  color: 'var(--plantel)' },
-                    { key: 'molino',  label: 'Plantel → Molino', color: 'var(--molino)'  },
+                    { key: 'campo',   label: 'Campo',   color: 'var(--campo)'   },
+                    { key: 'vienen',  label: 'Vienen',  color: 'var(--vienen)'  },
+                    { key: 'patio',   label: 'Patio',   color: 'var(--patio)'   },
+                    { key: 'plantel', label: 'Plantel', color: 'var(--plantel)' },
+                    { key: 'molino',  label: 'Molino',  color: 'var(--molino)'  },
                 ].map(s => {
                     const tph = f.stages?.[s.key]?.flow_tph ?? null;
-                    return `<div class="stage-flow-box" style="border-left:3px solid ${s.color}">
+                    return `<div class="stage-flow-box" style="border-top:3px solid ${s.color}">
                         <div class="stat-label">${s.label}</div>
                         <div class="stat-value" style="color:${tph !== null && tph > 0 ? s.color : 'var(--dim)'}">
                             ${tph !== null ? tph.toFixed(1) : '—'}
@@ -514,7 +649,7 @@
                 }).join('');
 
                 const card = document.createElement('div');
-                card.className = 'frente-card';
+                card.className = 'frente-card' + (f.inactive ? ' inactive' : '');
                 card.innerHTML = `
                     <div class="frente-header">
                         <div class="frente-title">
@@ -522,6 +657,7 @@
                             <div class="frente-name">${f.nombre}</div>
                         </div>
                         <div class="frente-badges">
+                            ${f.inactive ? '<span class="badge-inactive">INACTIVO</span>' : ''}
                             <div class="badge ${f.status}">${f.status.toUpperCase()}</div>
                             <div class="trend-badge ${trendClass}">${trendSymbol}</div>
                         </div>
@@ -539,6 +675,10 @@
                             </div>
                             <div class="expand-icon">▼</div>
                         </div>
+                        <div class="stage-chips">
+                            ${renderStageChips(f.stages)}
+                            ${renderTrend3h(f.trend_3h)}
+                        </div>
                     </div>
 
                     <div class="frente-detail">
@@ -548,7 +688,7 @@
                         </div>
 
                         <div class="detail-section">
-                            <h3>Flujos de Transporte — Balance de Masa (t/h)</h3>
+                            <h3>Flujos por Etapa — Balance de Masa (t/h)</h3>
                             <div class="stage-flows-grid">${stageBoxes}</div>
                         </div>
 
@@ -556,13 +696,13 @@
                             <h3>Flujo Molino — Actual vs Promedio</h3>
                             <div class="detail-stats">
                                 <div class="stat-box">
-                                    <div class="stat-label">Actual</div>
+                                    <div class="stat-label">Actual (1h)</div>
                                     <div class="stat-value">${flow.toFixed(1)}</div>
                                     <div class="stat-subtext">t/h</div>
                                 </div>
                                 <div class="stat-box">
                                     <div class="stat-label">Promedio</div>
-                                    <div class="stat-value">${(f.flow.avg_tph || 0).toFixed(1)}</div>
+                                    <div class="stat-value">${avgFlow.toFixed(1)}</div>
                                     <div class="stat-subtext">${f.flow.history_points} lecturas</div>
                                 </div>
                                 <div class="stat-box">
@@ -570,16 +710,8 @@
                                     <div class="stat-value" style="color:${diff >= 0 ? 'var(--ok)' : 'var(--stop)'}">
                                         ${diff >= 0 ? '+' : ''}${diff.toFixed(1)}
                                     </div>
-                                    <div class="stat-subtext">(${diffPercent}%)</div>
+                                    <div class="stat-subtext">Tendencia 3h: ${f.trend_3h || '—'}</div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="detail-section">
-                            <h3>Tendencia — Últimas ${history.length} Lecturas</h3>
-                            <div class="chart-container">
-                                <div class="chart" id="chart-${codigo}"></div>
-                                <div class="chart-label">Tiempo →</div>
                             </div>
                         </div>
                     </div>
@@ -588,23 +720,10 @@
                 card.addEventListener('click', () => {
                     card.classList.toggle('expanded');
                     if (card.classList.contains('expanded')) {
-                        // Pipeline del frente
                         const pipelineEl = card.querySelector('.frente-pipeline');
                         if (pipelineEl && !pipelineEl.dataset.drawn) {
                             drawPipeline(pipelineEl, f.snapshot, f.stages);
                             pipelineEl.dataset.drawn = '1';
-                        }
-                        // Gráfica de tendencia
-                        const chartEl = card.querySelector(`#chart-${codigo}`);
-                        if (chartEl && !chartEl.dataset.drawn && history.length > 0) {
-                            const maxH = Math.max(...history.map(h => h.flow), avgFlow * 1.2, 1);
-                            chartEl.innerHTML = history.map(h => {
-                                const barH = Math.max(2, (h.flow / maxH) * 150);
-                                return `<div class="chart-bar" style="height:${barH}px">
-                                    <div class="chart-bar-value">${h.flow.toFixed(0)}</div>
-                                </div>`;
-                            }).join('');
-                            chartEl.dataset.drawn = '1';
                         }
                     }
                 });
@@ -613,9 +732,125 @@
             });
         }
 
+        // ── 24h SVG Chart ──
+        function renderHistoryChart() {
+            const frente = document.getElementById('history-frente-select').value;
+            const area   = document.getElementById('history-chart-area');
+
+            if (!historyData || historyData.length < 2) {
+                area.innerHTML = '<div class="chart-no-data">No hay suficientes datos históricos aún</div>';
+                return;
+            }
+
+            const points = historyData.map(d => ({
+                time: new Date(d.time),
+                flow: frente === '__global__' ? d.total_flow : (d.frentes[frente] ?? null)
+            })).filter(p => p.flow !== null);
+
+            if (points.length < 2) {
+                area.innerHTML = '<div class="chart-no-data">Sin datos para este frente en las últimas 24h</div>';
+                return;
+            }
+
+            const W = 800, H = 180, PAD = { top: 16, right: 16, bottom: 36, left: 50 };
+            const chartW = W - PAD.left - PAD.right;
+            const chartH = H - PAD.top  - PAD.bottom;
+
+            const times = points.map(p => p.time.getTime());
+            const flows = points.map(p => p.flow);
+            const tMin  = Math.min(...times);
+            const tMax  = Math.max(...times);
+            const fMax  = Math.max(...flows, 1);
+            const fAvg  = flows.reduce((a, b) => a + b, 0) / flows.length;
+
+            const tx = t => PAD.left + ((t - tMin) / (tMax - tMin || 1)) * chartW;
+            const ty = f => PAD.top  + (1 - f / fMax) * chartH;
+
+            // Polyline coords
+            const pts = points.map(p => `${tx(p.time.getTime()).toFixed(1)},${ty(p.flow).toFixed(1)}`).join(' ');
+
+            // Area path
+            const first = points[0], last = points[points.length - 1];
+            const areaPath = `M${tx(first.time.getTime()).toFixed(1)},${(PAD.top + chartH).toFixed(1)} ` +
+                points.map(p => `L${tx(p.time.getTime()).toFixed(1)},${ty(p.flow).toFixed(1)}`).join(' ') +
+                ` L${tx(last.time.getTime()).toFixed(1)},${(PAD.top + chartH).toFixed(1)} Z`;
+
+            // X axis tick marks — every 2 hours
+            const xTicks = [];
+            const startHour = new Date(tMin);
+            startHour.setMinutes(0, 0, 0);
+            startHour.setHours(startHour.getHours() + 2);
+            for (let t = startHour.getTime(); t <= tMax; t += 2 * 3600 * 1000) {
+                const x = tx(t);
+                if (x >= PAD.left && x <= PAD.left + chartW) {
+                    const label = new Intl.DateTimeFormat('es-SV', { hour: '2-digit', minute: '2-digit', timeZone: 'America/El_Salvador' }).format(new Date(t));
+                    xTicks.push({ x, label });
+                }
+            }
+
+            // Y axis ticks — 4 ticks
+            const yTicks = [0, 0.25, 0.5, 0.75, 1.0].map(r => ({
+                y: ty(fMax * r),
+                label: (fMax * r).toFixed(0)
+            }));
+
+            const color = frente === '__global__' ? 'var(--molino)' : 'var(--campo)';
+
+            const svg = `<svg class="history-chart" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="${color}" stop-opacity="0.25"/>
+                        <stop offset="100%" stop-color="${color}" stop-opacity="0.03"/>
+                    </linearGradient>
+                </defs>
+
+                <!-- Y grid lines -->
+                ${yTicks.map(t => `<line x1="${PAD.left}" y1="${t.y.toFixed(1)}" x2="${PAD.left + chartW}" y2="${t.y.toFixed(1)}"
+                    stroke="#c3d9c3" stroke-width="1" stroke-dasharray="4,3"/>`).join('\n')}
+
+                <!-- Area fill -->
+                <path d="${areaPath}" fill="url(#chartGrad)"/>
+
+                <!-- Line -->
+                <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+
+                <!-- Average line -->
+                <line x1="${PAD.left}" y1="${ty(fAvg).toFixed(1)}" x2="${PAD.left + chartW}" y2="${ty(fAvg).toFixed(1)}"
+                    stroke="${color}" stroke-width="1" stroke-dasharray="6,4" opacity="0.5"/>
+                <text x="${(PAD.left + chartW + 3).toFixed(0)}" y="${(ty(fAvg) + 4).toFixed(0)}"
+                    font-size="9" fill="${color}" opacity="0.7">avg</text>
+
+                <!-- Y axis labels -->
+                ${yTicks.map(t => `<text x="${(PAD.left - 5).toFixed(0)}" y="${(t.y + 4).toFixed(0)}"
+                    text-anchor="end" font-size="10" fill="#4a6b4a">${t.label}</text>`).join('\n')}
+                <text x="${(PAD.left - 5).toFixed(0)}" y="${(PAD.top - 4).toFixed(0)}"
+                    text-anchor="end" font-size="9" fill="#4a6b4a">t/h</text>
+
+                <!-- X axis tick labels -->
+                ${xTicks.map(t => `<line x1="${t.x.toFixed(1)}" y1="${(PAD.top + chartH).toFixed(1)}" x2="${t.x.toFixed(1)}" y2="${(PAD.top + chartH + 5).toFixed(1)}"
+                    stroke="#c3d9c3" stroke-width="1"/>
+                <text x="${t.x.toFixed(1)}" y="${(PAD.top + chartH + 16).toFixed(0)}"
+                    text-anchor="middle" font-size="10" fill="#4a6b4a">${t.label}</text>`).join('\n')}
+
+                <!-- Axes -->
+                <line x1="${PAD.left}" y1="${PAD.top}" x2="${PAD.left}" y2="${PAD.top + chartH}"
+                    stroke="#c3d9c3" stroke-width="1"/>
+                <line x1="${PAD.left}" y1="${PAD.top + chartH}" x2="${PAD.left + chartW}" y2="${PAD.top + chartH}"
+                    stroke="#c3d9c3" stroke-width="1"/>
+            </svg>`;
+
+            area.innerHTML = `<div class="svg-chart-wrap">${svg}</div>`;
+        }
+
+        document.getElementById('history-frente-select').addEventListener('change', renderHistoryChart);
+
+        async function refreshAll() {
+            await Promise.all([fetchData(), fetchHistory()]);
+        }
+
         window.addEventListener('load', () => {
-            fetchData();
-            setInterval(fetchData, REFRESH_INTERVAL);
+            refreshAll();
+            setInterval(refreshAll, REFRESH_INTERVAL);
         });
     </script>
 </body>
