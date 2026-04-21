@@ -254,6 +254,8 @@ def compute_api_data(history):
         curr = history[i]
         prev = history[j]
         for codigo, curr_data in curr['frentes'].items():
+            if codigo not in historical_flows:
+                continue  # Frente activo en histórico pero no en lectura actual
             if codigo in prev['frentes']:
                 prev_data = prev['frentes'][codigo]
                 delta_moli    = curr_data['tmoli']    - prev_data['tmoli']
