@@ -288,10 +288,27 @@ def compute_api_data(history):
     for codigo, curr_frente in sorted(current['frentes'].items(),
                                        key=lambda x: (int(x[0]) if x[0].isdigit() else 9999)):
         flow_tph = None
+        curr_stage_flows = {}   # flujos actuales del par (lectura actual - hace 1h)
         if previous and elapsed_h and codigo in previous['frentes']:
-            delta = curr_frente['tmoli'] - previous['frentes'][codigo]['tmoli']
-            if delta >= 0:
-                flow_tph = delta / elapsed_h
+            prev_fr = previous['frentes'][codigo]
+            delta_moli    = curr_frente['tmoli']    - prev_fr['tmoli']
+            delta_plantel = curr_frente['tplantel'] - prev_fr['tplantel']
+            delta_patio   = curr_frente['tpatio']   - prev_fr['tpatio']
+            delta_vienen  = curr_frente['tvienen']  - prev_fr['tvienen']
+            delta_campo   = curr_frente['tcampo']   - prev_fr['tcampo']
+            if delta_moli >= 0:
+                flow_tph   = delta_moli / elapsed_h
+                f_plantel  = max(0.0, flow_tph  + delta_plantel / elapsed_h)
+                f_patio    = max(0.0, f_plantel + delta_patio   / elapsed_h)
+                f_vienen   = max(0.0, f_patio   + delta_vienen  / elapsed_h)
+                f_campo    = max(0.0, f_vienen  + delta_campo   / elapsed_h)
+                curr_stage_flows = {
+                    'molino':  round(flow_tph, 2),
+                    'plantel': round(f_plantel, 2),
+                    'patio':   round(f_patio,   2),
+                    'vienen':  round(f_vienen,  2),
+                    'campo':   round(f_campo,   2),
+                }
 
         avg_tph = avg_flows.get(codigo)
         history_pts = len(historical_flows.get(codigo, []))
@@ -300,45 +317,54 @@ def compute_api_data(history):
 
         flow_series = list(zip(historical_flow_ts[codigo], historical_flows[codigo]))
         trend_3h = classify_trend_3h(flow_series, timestamps[-1])
-        # Inactivo si no hay flujo significativo en ninguna etapa (ni actual ni promedio histórico)
-        # Corresponde a que todos los chips del frente muestran "—" o 0
-        chip_flows = [flow_tph, avg_tph] + [
-            avg_stage_flows[codigo].get(s) for s in ['campo', 'vienen', 'plantel', 'patio']
-        ]
-        inactive = not any(f is not None and f > 0.5 for f in chip_flows)
+
+        # Para determinar inactividad usamos flujos actuales; si no hay, usamos promedios
+        display_flows = curr_stage_flows or {
+            'molino':  avg_tph,
+            'plantel': avg_stage_flows[codigo].get('plantel'),
+            'patio':   avg_stage_flows[codigo].get('patio'),
+            'vienen':  avg_stage_flows[codigo].get('vienen'),
+            'campo':   avg_stage_flows[codigo].get('campo'),
+        }
+        inactive = not any(v is not None and v > 0.5 for v in display_flows.values())
+
+        # flow_tph por etapa: usar par actual; si no disponible, usar promedio histórico
+        def stage_flow(stage):
+            if curr_stage_flows:
+                return curr_stage_flows.get(stage)
+            if stage == 'molino':
+                return round(avg_tph, 2) if avg_tph is not None else None
+            v = avg_stage_flows[codigo].get(stage)
+            return round(v, 2) if v is not None else None
 
         frentes_data[codigo] = {
             "codigo": codigo,
             "nombre": curr_frente['frente'],
             "snapshot": {
-                "ucampo": curr_frente['ucampo'],
-                "tcampo": curr_frente['tcampo'],
-                "uvienen": curr_frente['uvienen'],
-                "tvienen": curr_frente['tvienen'],
+                "ucampo":   curr_frente['ucampo'],
+                "tcampo":   curr_frente['tcampo'],
+                "uvienen":  curr_frente['uvienen'],
+                "tvienen":  curr_frente['tvienen'],
                 "uplantel": curr_frente['uplantel'],
                 "tplantel": curr_frente['tplantel'],
-                "upatio": curr_frente['upatio'],
-                "tpatio": curr_frente['tpatio'],
-                "umoli": curr_frente['umoli'],
-                "tmoli": curr_frente['tmoli'],
-                "uvan": curr_frente['uvan'],
-                "tvan": curr_frente['tvan']
+                "upatio":   curr_frente['upatio'],
+                "tpatio":   curr_frente['tpatio'],
+                "umoli":    curr_frente['umoli'],
+                "tmoli":    curr_frente['tmoli'],
+                "uvan":     curr_frente['uvan'],
+                "tvan":     curr_frente['tvan']
             },
             "flow": {
-                "current_tph": round(flow_tph, 2) if flow_tph is not None else None,
-                "avg_tph": round(avg_tph, 2) if avg_tph is not None else None,
-                "delta_ton": round(curr_frente['tmoli'] - previous['frentes'].get(codigo, {}).get('tmoli', curr_frente['tmoli']), 2) if previous else 0,
+                "current_tph":    round(flow_tph, 2) if flow_tph is not None else None,
+                "avg_tph":        round(avg_tph, 2) if avg_tph is not None else None,
+                "delta_ton":      round(curr_frente['tmoli'] - previous['frentes'].get(codigo, {}).get('tmoli', curr_frente['tmoli']), 2) if previous else 0,
                 "history_points": history_pts
             },
             "stages": {stage: {
                 **_calculate_stage_flows(curr_frente)[stage],
-                'flow_tph': (
-                    round(avg_flows.get(codigo), 2) if stage == 'molino' and avg_flows.get(codigo) is not None else
-                    round(avg_stage_flows[codigo].get(stage), 2) if stage in ['plantel', 'patio', 'vienen', 'campo'] and avg_stage_flows[codigo].get(stage) is not None else
-                    None
-                )
+                'flow_tph': stage_flow(stage)
             } for stage in _calculate_stage_flows(curr_frente)},
-            "trend": trend,
+            "trend":    trend,
             "trend_3h": trend_3h,
             "inactive": inactive
         }
