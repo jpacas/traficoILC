@@ -245,6 +245,14 @@
             font-size: 0.6rem;
             opacity: 0.65;
         }
+        .stage-item-stock {
+            font-size: 0.58rem;
+            opacity: 0.55;
+            font-family: monospace;
+            white-space: nowrap;
+            margin-top: 2px;
+            line-height: 1.2;
+        }
 
         /* ── Trend row (below stage grid) ── */
         .trend-row {
@@ -581,13 +589,18 @@
                 { key: 'patio',   label: 'Patio',   cls: 'stage-item-patio'   },
                 { key: 'molino',  label: 'Molino',  cls: 'stage-item-molino'  },
             ];
+            const fmtT = t => t >= 1000 ? (t / 1000).toFixed(1) + 'k' : Math.round(t) + '';
             return stageList.map(s => {
-                const tph = stages?.[s.key]?.flow_tph;
-                const val = tph != null ? tph.toFixed(0) : '—';
+                const st   = stages?.[s.key];
+                const tph  = st?.flow_tph;
+                const tons = st?.current_t ?? 0;
+                const units = st?.current_u ?? 0;
+                const flowVal = tph != null ? tph.toFixed(0) : '—';
                 return `<div class="stage-item ${s.cls}">
                     <span class="stage-item-label">${s.label}</span>
-                    <span class="stage-item-value">${val}</span>
+                    <span class="stage-item-value">${flowVal}</span>
                     <span class="stage-item-unit">t/h</span>
+                    <span class="stage-item-stock">${units}u · ${fmtT(tons)}t</span>
                 </div>`;
             }).join('');
         }
