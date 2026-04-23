@@ -85,6 +85,13 @@
             align-items: stretch;
             gap: 4px;
         }
+        /* Modo compacto: oculta etiquetas t/h en los conectores (ya visibles en stage-flow boxes) */
+        .pl-row--compact .pl-flow { display: none; }
+        .pl-row--compact .pl-conn { min-width: 22px; }
+        .pl-row--compact .pl-icon { font-size: 1.1rem; }
+        .pl-row--compact .pl-tons { font-size: 1.05rem; }
+        .pl-row--compact .pl-label { font-size: 0.58rem; }
+        .pl-row--compact .pl-units { font-size: 0.68rem; }
         .pl-node {
             flex: 1;
             min-width: 0;
@@ -498,7 +505,7 @@
         let frentesIndex = {};  // codigo → nombre
 
         // ── Pipeline HTML renderer ──
-        function drawPipeline(container, snapshot, stageFlows) {
+        function drawPipeline(container, snapshot, stageFlows, compact = false) {
             const mkNode = (color, icon, label, tons, units) =>
                 `<div class="pl-node" style="--c:${color}">
                     <div class="pl-icon">${icon}</div>
@@ -526,7 +533,7 @@
                 mkNode('var(--molino)','⚙️', 'Molino',  snapshot.tmoli,   snapshot.umoli),
             ].join('');
 
-            container.innerHTML = `<div class="pl-row">${parts}</div>`;
+            container.innerHTML = `<div class="pl-row${compact ? ' pl-row--compact' : ''}">${parts}</div>`;
         }
 
         // ── Trend_3h badge ──
@@ -683,7 +690,7 @@
                 `;
 
                 const bodyPipeEl = card.querySelector('.frente-pipeline-body');
-                if (bodyPipeEl) drawPipeline(bodyPipeEl, f.snapshot, f.stages);
+                if (bodyPipeEl) drawPipeline(bodyPipeEl, f.snapshot, f.stages, true);
 
                 card.addEventListener('click', () => {
                     card.classList.toggle('expanded');
