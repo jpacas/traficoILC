@@ -513,22 +513,17 @@
                     ${tph != null ? `<span class="pl-flow">${tph.toFixed(1)} t/h</span>` : ''}
                     <span class="pl-arrow">→</span>
                 </div>`;
-            const mkVienConn = (tph, ucam) =>
-                `<div class="pl-conn" style="min-width:72px;">
-                    ${tph != null ? `<span class="pl-flow" style="background:rgba(217,119,6,0.12);color:var(--vienen);">🚚 ${tph.toFixed(1)} t/h</span>` : '<span class="pl-arrow" style="color:var(--vienen)">🚚</span>'}
-                    <span class="pl-arrow">→</span>
-                    ${ucam > 0 ? `<span style="font-size:0.56rem;color:var(--dim);">${ucam}u transit.</span>` : ''}
-                </div>`;
-
             const tInv = (snapshot.tpatio || 0) + (snapshot.tplantel || 0);
             const uInv = (snapshot.upatio || 0) + (snapshot.uplantel || 0);
 
             const parts = [
-                mkNode('var(--campo)',  '🌾', 'Campo',      snapshot.tcampo, snapshot.ucampo),
-                mkVienConn(stageFlows?.vienen?.flow_tph, snapshot.uvienen || 0),
+                mkNode('var(--campo)',  '🌾', 'Campo',   snapshot.tcampo,  snapshot.ucampo),
+                mkConn(stageFlows?.campo?.flow_tph),
+                mkNode('var(--vienen)','🚚', 'Vienen',  snapshot.tvienen, snapshot.uvienen),
+                mkConn(stageFlows?.vienen?.flow_tph),
                 mkNode('var(--patio)', '📦', '<span class="label-desktop">Patio + Plantel</span><span class="label-mobile">PP</span>', tInv, uInv),
                 mkConn(stageFlows?.molino?.flow_tph),
-                mkNode('var(--molino)','⚙️', 'Molino',     snapshot.tmoli,  snapshot.umoli),
+                mkNode('var(--molino)','⚙️', 'Molino',  snapshot.tmoli,   snapshot.umoli),
             ].join('');
 
             container.innerHTML = `<div class="pl-row">${parts}</div>`;

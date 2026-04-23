@@ -397,7 +397,7 @@ def compute_api_data(history):
     # Calcular flujos globales por etapa: suma de flujos de cada frente
     # Como check: sum(frente_flows) == total_flow
     global_stages = _calculate_stage_flows(current['total'])
-    for stage in ['plantel', 'patio', 'vienen']:
+    for stage in ['plantel', 'patio', 'vienen', 'campo']:
         stage_flow_sum = sum(
             avg_stage_flows[codigo][stage]
             for codigo in avg_stage_flows.keys()

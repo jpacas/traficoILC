@@ -202,7 +202,7 @@ def save_reading(reading):
 
         cur.execute("""
             DELETE FROM readings WHERE id NOT IN (
-                SELECT id FROM readings ORDER BY fetch_time DESC LIMIT 300
+                SELECT id FROM readings ORDER BY fetch_time DESC LIMIT 576
             )
         """)
 
